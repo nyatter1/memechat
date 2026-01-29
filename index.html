@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEME CHAT 9000 // DARK VOID EDITION</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Press+Start+2P&family=Rubik+Glitch&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        /* CHAOS STYLES */
+        body {
+            font-family: 'Comic Neue', 'Comic Sans MS', sans-serif;
+            overflow-x: hidden;
+            /* White cursor for dark mode */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white"><text y="20" font-size="20">🖕</text></svg>'), auto;
+        }
+
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        .font-glitch { font-family: 'Rubik Glitch', system-ui; }
+
+        @keyframes rainbow-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Dark Mode Chaos Gradient */
+        .bg-chaos {
+            background: linear-gradient(-45deg, #000000, #1a0b2e, #0f0f29, #001a1a, #26001b, #1a0000, #000000);
+            background-size: 400% 400%;
+            animation: rainbow-bg 15s ease infinite;
+        }
+
+        .floating-emoji {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 3s linear forwards;
+            font-size: 2rem;
+            z-index: 0;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .shake-constant {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .glitch-text {
+            position: relative;
+        }
+
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111; /* Dark background for glitch mask */
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 #00fff9;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 30px, 0); }
+            20% { clip: rect(80px, 9999px, 100px, 0); }
+            40% { clip: rect(40px, 9999px, 60px, 0); }
+            60% { clip: rect(10px, 9999px, 80px, 0); }
+            80% { clip: rect(60px, 9999px, 10px, 0); }
+            100% { clip: rect(90px, 9999px, 50px, 0); }
+        }
+
+        @keyframes glitch-anim2 {
+            0% { clip: rect(60px, 9999px, 10px, 0); }
+            20% { clip: rect(20px, 9999px, 60px, 0); }
+            40% { clip: rect(80px, 9999px, 10px, 0); }
+            60% { clip: rect(10px, 9999px, 90px, 0); }
+            80% { clip: rect(30px, 9999px, 50px, 0); }
+            100% { clip: rect(70px, 9999px, 100px, 0); }
+        }
+
+        .brutal-shadow {
+            /* White shadow for dark mode contrast */
+            box-shadow: 10px 10px 0px 0px #ffffff;
+            transition: all 0.1s;
+        }
+        .brutal-shadow:active {
+            box-shadow: 2px 2px 0px 0px #ffffff;
+            transform: translate(8px, 8px);
+        }
+
+        /* TILT EFFECT */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+        }
+        
+        /* Marquee */
+        .marquee-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #3b0764; /* Dark Purple */
+            color: #ffffff;
+            font-family: 'Press Start 2P';
+            padding: 10px 0;
+            border-top: 4px solid #ffffff;
+            z-index: 50;
+        }
+        
+        .cat-peek {
+            position: absolute;
+            top: -60px;
+            right: 20px;
+            width: 100px;
+            transition: top 0.3s;
+            z-index: -1;
+            /* Invert filter to make cat look ghostly/dark mode fit */
+            filter: invert(1) grayscale(1);
+        }
+        .form-container:hover .cat-peek {
+            top: -90px;
+        }
+    </style>
+</head>
+<body class="bg-chaos min-h-screen flex flex-col items-center justify-center overflow-hidden select-none text-white">
+
+    <!-- FLOATING BACKGROUND MEMES -->
+    <div id="emoji-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- HEADER -->
+    <h1 class="font-glitch text-6xl md:text-9xl text-white mb-8 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10" data-text="MEME CHAT">
+        MEME<br/><span class="text-purple-400">CHAT</span>
+    </h1>
+
+    <!-- MAIN CARD -->
+    <div class="tilt-card relative w-full max-w-md p-2 z-20">
+        
+        <!-- PEEKING CAT -->
+        <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="cat-peek rounded-t-lg border-4 border-white bg-gray-900" alt="Peeking Cat">
+
+        <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
+            
+            <!-- TOGGLE SWITCH -->
+            <div class="flex border-4 border-white mb-6 bg-gray-800">
+                <button id="btn-login" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-yellow-400 text-black hover:bg-yellow-300 transition-colors border-r-4 border-white">
+                    LOG IN
+                </button>
+                <button id="btn-signup" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors">
+                    SIGN UP
+                </button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="form-login" class="flex flex-col gap-4 block">
+                <div class="group">
+                    <label class="font-pixel text-xs mb-2 block text-gray-300">USER_ID_OR_WHATEVER</label>
+                    <input type="text" placeholder="xX_DarkLord_Xx" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-pink-900 focus:ring-4 focus:ring-pink-500 transition-all transform focus:-rotate-1">
+                </div>
+                <div class="group">
+                    <label class="font-pixel text-xs mb-2 block text-gray-300">SECRET_PASSWORD</label>
+                    <input type="password" placeholder="********" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-blue-900 focus:ring-4 focus:ring-blue-500 transition-all transform focus:rotate-1">
+                </div>
+                <button type="submit" class="mt-4 bg-white text-black font-pixel py-4 border-4 border-transparent hover:border-pink-500 hover:text-pink-500 hover:bg-black transition-all text-sm brutal-shadow">
+                    ENTER THE VOID
+                </button>
+                <p class="text-center text-xs mt-2 cursor-pointer text-gray-400 hover:text-red-500 hover:underline" onclick="alert('SKILL ISSUE TBH')">Forgot Password?</p>
+            </form>
+
+            <!-- SIGNUP FORM -->
+            <form id="form-signup" class="flex flex-col gap-4 hidden">
+                <div class="group">
+                    <label class="font-pixel text-xs mb-2 block text-gray-300">CHOOSE_NAME</label>
+                    <input type="text" placeholder="CryptoWojak" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-green-900 focus:ring-4 focus:ring-green-500 transition-all">
+                </div>
+                <div class="group">
+                    <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_ADDRESS</label>
+                    <input type="email" placeholder="anon@shadow.net" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-yellow-900 focus:ring-4 focus:ring-yellow-500 transition-all">
+                </div>
+                <div class="group">
+                    <label class="font-pixel text-xs mb-2 block text-gray-300">SUPER_SECURE_PW</label>
+                    <input type="password" placeholder="password123 (dont)" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-purple-900 focus:ring-4 focus:ring-purple-500 transition-all">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="soul-contract" class="w-6 h-6 border-4 border-white accent-pink-500 bg-gray-800">
+                    <label for="soul-contract" class="text-xs font-bold leading-tight text-gray-300">I agree to sell my soul to the void.</label>
+                </div>
+                <button type="submit" class="mt-4 bg-red-800 text-white font-pixel py-4 border-4 border-transparent hover:border-white hover:text-white hover:bg-red-600 transition-all text-sm brutal-shadow animate-pulse">
+                    SACRIFICE & JOIN
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- MARQUEE FOOTER -->
+    <div class="marquee-container">
+        <marquee scrollamount="12" scrolldelay="100">
+            WARNING: DARK MODE ACTIVATED /// PROTECT YOUR EYES /// THE VOID STARES BACK /// NO REFUNDS ON SOULS /// CHAOS REIGNS ETERNAL
+        </marquee>
+    </div>
+
+    <!-- AUDIO (Fake/Simulated) -->
+    <div class="fixed bottom-20 right-4 z-50">
+        <button onclick="toggleChaos()" class="bg-gray-900 text-white border-4 border-white p-2 rounded-full shadow-lg hover:rotate-12 transition-transform">
+            🤡 CHAOS MODE
+        </button>
+    </div>
+
+    <script>
+        // --- DOM ELEMENTS ---
+        const btnLogin = document.getElementById('btn-login');
+        const btnSignup = document.getElementById('btn-signup');
+        const formLogin = document.getElementById('form-login');
+        const formSignup = document.getElementById('form-signup');
+        const body = document.body;
+        const container = document.querySelector('.form-container');
+
+        // --- SOUND EFFECTS (Synthesized) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function beep(freq = 440, type = 'square') {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // --- TOGGLE LOGIC ---
+        function switchTab(isLogin) {
+            beep(isLogin ? 600 : 300, 'sawtooth');
+            if (isLogin) {
+                formLogin.classList.remove('hidden');
+                formLogin.classList.add('flex'); // restore flex
+                formSignup.classList.add('hidden');
+                formSignup.classList.remove('flex');
+                
+                btnLogin.classList.add('bg-yellow-400', 'text-black', 'border-r-4');
+                btnLogin.classList.remove('bg-gray-700', 'text-gray-400');
+                
+                btnSignup.classList.add('bg-gray-700', 'text-gray-400');
+                btnSignup.classList.remove('bg-yellow-400', 'text-black');
+            } else {
+                formLogin.classList.add('hidden');
+                formLogin.classList.remove('flex');
+                formSignup.classList.remove('hidden');
+                formSignup.classList.add('flex'); // restore flex
+
+                btnSignup.classList.add('bg-yellow-400', 'text-black');
+                btnSignup.classList.remove('bg-gray-700', 'text-gray-400');
+
+                btnLogin.classList.add('bg-gray-700', 'text-gray-400', 'border-r-4');
+                btnLogin.classList.remove('bg-yellow-400', 'text-black');
+            }
+            
+            // Random Tilt on switch
+            const rot = Math.random() * 10 - 5;
+            container.style.transform = `rotate(${rot}deg) scale(1.02)`;
+            setTimeout(() => {
+                container.style.transform = `rotate(0deg) scale(1)`;
+            }, 200);
+        }
+
+        btnLogin.addEventListener('click', () => switchTab(true));
+        btnSignup.addEventListener('click', () => switchTab(false));
+
+        // --- EMOJI RAIN ---
+        const emojis = ['🌑', '🕸️', '🔮', '💀', '🦇', '👾', '👁️', '⚡', '💊', '🛸', '🥀'];
+        
+        function spawnEmoji() {
+            const el = document.createElement('div');
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            el.className = 'floating-emoji';
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.bottom = '-50px';
+            el.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+            document.getElementById('emoji-container').appendChild(el);
+
+            setTimeout(() => { el.remove(); }, 3000);
+        }
+
+        setInterval(spawnEmoji, 800);
+
+        // --- INPUT CHAOS ---
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                spawnEmoji();
+                spawnEmoji();
+                // Random neon border color on container
+                if (Math.random() > 0.8) {
+                    const colors = ['#ffffff', '#ff00ff', '#00ffff', '#ffff00', '#00ff00'];
+                    container.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
+                }
+            });
+            input.addEventListener('focus', () => {
+                beep(800, 'sine');
+            });
+        });
+
+        // --- FORM SUBMIT MOCK ---
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            beep(100, 'square');
+            beep(150, 'square');
+            beep(200, 'square');
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = "SUMMONING DAEMONS...";
+            btn.disabled = true;
+            btn.classList.add('cursor-wait');
+
+            // Shake screen
+            body.style.animation = "shake 0.5s infinite";
+
+            setTimeout(() => {
+                body.style.animation = "";
+                // REDIRECT TO CHAT.HTML HERE
+                window.location.href = "chat.html";
+            }, 2000);
+        };
+
+        formLogin.addEventListener('submit', handleSubmit);
+        formSignup.addEventListener('submit', handleSubmit);
+
+        // --- CHAOS MODE ---
+        let chaosInterval;
+        function toggleChaos() {
+            const btn = document.querySelector('button[onclick="toggleChaos()"]');
+            if (chaosInterval) {
+                clearInterval(chaosInterval);
+                chaosInterval = null;
+                document.body.style.filter = "none";
+                btn.innerText = "🤡 CHAOS MODE";
+                alert("Boring mode activated.");
+            } else {
+                btn.innerText = "🛑 STOP THE PAIN";
+                chaosInterval = setInterval(() => {
+                    const hue = Math.random() * 360;
+                    document.body.style.filter = `hue-rotate(${hue}deg) contrast(1.5) invert(0.1)`;
+                    const x = Math.random() * 10 - 5;
+                    const y = Math.random() * 10 - 5;
+                    document.body.style.transform = `translate(${x}px, ${y}px)`;
+                }, 100);
+                beep(50, 'sawtooth');
+            }
+        }
+
+        // --- MOUSE TRACKING EYES (WHITE SHADOW) ---
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth - e.pageX) / 50;
+            const y = (window.innerHeight - e.pageY) / 50;
+            container.style.boxShadow = `${x}px ${y}px 0px 0px #ffffff`;
+        });
+
+    </script>
+</body>
+</html>
