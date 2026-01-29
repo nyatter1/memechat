@@ -210,7 +210,8 @@
                     <button class="h-10 w-10 border-2 border-white bg-gray-800 text-lg hover:bg-gray-700 active:scale-95 shadow-[2px_2px_0_#fff]">
                         📎
                     </button>
-                    <input id="msg-input" type="text" placeholder="SCREAM INTO THE VOID..." class="flex-1 h-10 bg-gray-900 border-2 border-white px-3 text-white text-sm font-bold focus:outline-none focus:bg-gray-800 focus:shadow-[inset_0_0_10px_#ff00ff] transition-all">
+                    <!-- ADDED AUTOCOMPLETE OFF -->
+                    <input id="msg-input" autocomplete="off" type="text" placeholder="SCREAM INTO THE VOID..." class="flex-1 h-10 bg-gray-900 border-2 border-white px-3 text-white text-sm font-bold focus:outline-none focus:bg-gray-800 focus:shadow-[inset_0_0_10px_#ff00ff] transition-all">
                     <button id="send-btn" class="brutal-btn h-10 px-4 text-xs font-bold hover:bg-pink-500 active:bg-pink-700">
                         SCREAM
                     </button>
@@ -275,16 +276,19 @@
                     <div class="flex gap-2 text-[10px] font-pixel text-gray-400 mb-4">
                         <span id="modal-age">LVL: ??</span> | <span id="modal-gender">CLASS: UNKNOWN</span>
                     </div>
-                    <p id="modal-bio" class="text-sm font-bold text-pink-400 mb-4 border-l-4 border-pink-500 pl-2 min-h-[3rem] whitespace-pre-wrap">Loading bio...</p>
+                    <!-- BIO DISPLAY: Scrollable & Max Height -->
+                    <p id="modal-bio" class="text-sm font-bold text-pink-400 mb-4 border-l-4 border-pink-500 pl-2 min-h-[3rem] max-h-32 overflow-y-auto whitespace-pre-wrap break-words pr-2">Loading bio...</p>
                </div>
   
                <!-- Edit Mode Inputs (Hidden) -->
                <div id="edit-form" class="hidden space-y-2 mb-4">
                   <div class="flex gap-2">
-                    <input id="input-age" placeholder="AGE/LVL" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
-                    <input id="input-gender" placeholder="GENDER/CLASS" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                    <input id="input-age" autocomplete="off" placeholder="AGE/LVL" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                    <input id="input-gender" autocomplete="off" placeholder="GENDER/CLASS" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
                   </div>
-                  <textarea id="input-bio" placeholder="WRITE YOUR LORE..." class="bg-black border border-white p-2 text-white text-xs w-full h-20 font-bold focus:outline-none focus:bg-gray-800 resize-none"></textarea>
+                  <!-- BIO INPUT: Char Limit -->
+                  <textarea id="input-bio" autocomplete="off" maxlength="280" placeholder="WRITE YOUR LORE (MAX 280 CHARS)..." class="bg-black border border-white p-2 text-white text-xs w-full h-24 font-bold focus:outline-none focus:bg-gray-800 resize-none"></textarea>
+                  <div class="text-[8px] text-right text-gray-500 font-pixel mt-1">LIMIT: 280 CHARS</div>
                </div>
   
                <!-- Stats & Actions -->
@@ -430,23 +434,27 @@
         }
 
         function listenForRemoteNotifications() {
+            // FIX: Removed 'orderBy' because it requires a specific Firestore index.
+            // We now filter old messages on the client side using bootTime.
+            const bootTime = Date.now();
+            
             const q = query(
                 collection(db, "notifications"), 
-                where("recipientUid", "==", currentUser.uid), 
-                orderBy("createdAt", "desc"), 
-                limit(10)
+                where("recipientUid", "==", currentUser.uid),
+                limit(20) // Limit strictly to prevent pulling too much history
             );
 
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
-                        // Avoid showing old notifications from before page load (rough check)
-                        const now = Date.now();
-                        const notifTime = data.createdAt ? data.createdAt.toMillis() : now;
                         
-                        // If notification is recent (within last 10 seconds) render it
-                        if (now - notifTime < 10000) {
+                        // Check if notification is new (created after we loaded the page)
+                        // 'createdAt' might be null immediately due to latency compensation, defaulting to now
+                        const notifTime = data.createdAt ? data.createdAt.toMillis() : Date.now();
+                        
+                        // 2-second buffer in case of slight clock differences or race conditions
+                        if (notifTime > (bootTime - 2000)) {
                              addNotification(data.message, data.type);
                         }
                     }
@@ -902,11 +910,21 @@
             
             const ref = doc(db, "users", currentProfileUid);
             const isLiked = !btnLike.classList.contains('grayscale');
+            
+            // Optimistic Update
+            let currentCount = parseInt(modalLikes.innerText) || 0;
+
             if (isLiked) {
                 btnLike.classList.add('grayscale');
+                currentCount = Math.max(0, currentCount - 1);
+                modalLikes.innerText = `${currentCount} SOUL${currentCount!==1?'S':''}`;
+                
                 await updateDoc(ref, { likedBy: arrayRemove(currentUser.uid) });
             } else {
                 btnLike.classList.remove('grayscale');
+                currentCount++;
+                modalLikes.innerText = `${currentCount} SOUL${currentCount!==1?'S':''}`;
+
                 const snap = await getDoc(ref);
                 if(!snap.exists()) {
                     await setDoc(ref, { likedBy: [currentUser.uid] }, { merge: true });
@@ -936,6 +954,7 @@
                 beep(800);
             }
             
+            // Verifying with server (Consistency check)
             const updatedSnap = await getDoc(ref);
             const count = updatedSnap.data().likedBy ? updatedSnap.data().likedBy.length : 0;
             modalLikes.innerText = `${count} SOUL${count!==1?'S':''}`;
