@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEME CHAT 9000 // DARK VOID EDITION</title>
+    <title>MEME CHAT 9000 // THE VOID</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Press+Start+2P&family=Rubik+Glitch&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <style>
-        /* CHAOS STYLES */
+        /* SHARED CHAOS STYLES */
         body {
             font-family: 'Comic Neue', 'Comic Sans MS', sans-serif;
-            overflow-x: hidden;
-            /* White cursor for dark mode */
+            overflow: hidden; /* Main chat shouldn't scroll body */
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white"><text y="20" font-size="20">🖕</text></svg>'), auto;
         }
 
@@ -25,352 +24,322 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Dark Mode Chaos Gradient */
         .bg-chaos {
             background: linear-gradient(-45deg, #000000, #1a0b2e, #0f0f29, #001a1a, #26001b, #1a0000, #000000);
             background-size: 400% 400%;
-            animation: rainbow-bg 15s ease infinite;
+            animation: rainbow-bg 20s ease infinite;
         }
 
-        .floating-emoji {
-            position: absolute;
-            pointer-events: none;
-            animation: floatUp 3s linear forwards;
-            font-size: 2rem;
-            z-index: 0;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .shake-constant {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
-        }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        .glitch-text {
-            position: relative;
-        }
-
+        /* Glitch Text */
+        .glitch-text { position: relative; }
         .glitch-text::before, .glitch-text::after {
             content: attr(data-text);
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #111; /* Dark background for glitch mask */
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a;
         }
-
         .glitch-text::before {
-            left: 2px;
-            text-shadow: -1px 0 #ff00c1;
+            left: 2px; text-shadow: -1px 0 #ff00c1;
             clip: rect(44px, 450px, 56px, 0);
             animation: glitch-anim 5s infinite linear alternate-reverse;
         }
-
         .glitch-text::after {
-            left: -2px;
-            text-shadow: -1px 0 #00fff9;
+            left: -2px; text-shadow: -1px 0 #00fff9;
             clip: rect(44px, 450px, 56px, 0);
             animation: glitch-anim2 5s infinite linear alternate-reverse;
         }
-
         @keyframes glitch-anim {
             0% { clip: rect(10px, 9999px, 30px, 0); }
             20% { clip: rect(80px, 9999px, 100px, 0); }
-            40% { clip: rect(40px, 9999px, 60px, 0); }
-            60% { clip: rect(10px, 9999px, 80px, 0); }
-            80% { clip: rect(60px, 9999px, 10px, 0); }
             100% { clip: rect(90px, 9999px, 50px, 0); }
         }
-
         @keyframes glitch-anim2 {
             0% { clip: rect(60px, 9999px, 10px, 0); }
-            20% { clip: rect(20px, 9999px, 60px, 0); }
-            40% { clip: rect(80px, 9999px, 10px, 0); }
-            60% { clip: rect(10px, 9999px, 90px, 0); }
-            80% { clip: rect(30px, 9999px, 50px, 0); }
             100% { clip: rect(70px, 9999px, 100px, 0); }
         }
 
-        .brutal-shadow {
-            /* White shadow for dark mode contrast */
-            box-shadow: 10px 10px 0px 0px #ffffff;
+        /* Specific Chat Styles */
+        .message-bubble {
+            border: 3px solid white;
+            box-shadow: 6px 6px 0px #ff00ff;
+            transition: transform 0.1s;
+        }
+        .message-bubble:hover {
+            transform: scale(1.02);
+            box-shadow: 4px 4px 0px #00ffff;
+        }
+        .message-self {
+            border-color: #ffff00;
+            box-shadow: 6px 6px 0px #ffffff;
+            align-self: flex-end;
+            background: #222;
+        }
+
+        .brutal-btn {
+            border: 3px solid white;
+            box-shadow: 4px 4px 0px #000;
+            background: #ff00ff;
+            color: white;
+            font-family: 'Press Start 2P';
             transition: all 0.1s;
         }
-        .brutal-shadow:active {
-            box-shadow: 2px 2px 0px 0px #ffffff;
-            transform: translate(8px, 8px);
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
         }
 
-        /* TILT EFFECT */
-        .tilt-card {
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
+        .brutal-shadow {
+            box-shadow: 10px 10px 0px 0px #ffffff;
         }
         
-        /* Marquee */
-        .marquee-container {
-            position: fixed;
-            bottom: 0;
-            background: #3b0764; /* Dark Purple */
-            color: #ffffff;
-            font-family: 'Press Start 2P';
-            padding: 10px 0;
-            border-top: 4px solid #ffffff;
-            z-index: 50;
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; border-left: 2px solid white; }
+        ::-webkit-scrollbar-thumb { background: #ff00c8; border: 2px solid white; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffffff; }
+
+        .floating-img {
+            position: absolute;
+            z-index: 0;
+            opacity: 0.1;
+            pointer-events: none;
         }
         
+        .user-item:hover {
+            background-color: #333;
+            transform: translateX(-5px);
+        }
     </style>
 </head>
-<body class="bg-chaos min-h-screen flex flex-col items-center justify-center overflow-hidden select-none text-white">
-
-    <!-- FLOATING BACKGROUND MEMES -->
-    <div id="emoji-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+<body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
 
     <!-- CONTENT WRAPPER (ZOOMED OUT EFFECT 80%) -->
-    <div class="relative z-20 flex flex-col items-center gap-2 transform scale-[0.8]">
-        <!-- HEADER -->
-        <h1 class="font-glitch text-4xl md:text-6xl text-white mb-4 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10" data-text="MEME CHAT">
-            MEME<br/><span class="text-purple-400">CHAT</span>
-        </h1>
-
-        <!-- MAIN CARD -->
-        <div class="tilt-card relative w-full max-w-md p-2 z-20">
+    <div class="relative z-20 w-full h-full flex items-center justify-center transform scale-[0.8]">
+        
+        <!-- CHAT WINDOW -->
+        <div class="w-[90vw] h-[85vh] max-w-7xl bg-gray-900 border-4 border-white flex brutal-shadow relative z-10 overflow-hidden">
             
-            <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
+            <!-- MAIN CHAT AREA (Left Side) -->
+            <main class="flex-1 flex flex-col relative border-r-4 border-white bg-black/20">
                 
-                <!-- TOGGLE SWITCH -->
-                <div class="flex border-4 border-white mb-6 bg-gray-800">
-                    <button id="btn-login" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-yellow-400 text-black hover:bg-yellow-300 transition-colors border-r-4 border-white">
-                        LOG IN
-                    </button>
-                    <button id="btn-signup" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors">
-                        SIGN UP
-                    </button>
+                <!-- TOP BAR -->
+                <header class="h-16 border-b-4 border-white bg-black flex items-center justify-between px-6 shadow-xl z-30">
+                    <div class="flex items-center gap-4">
+                        <button class="md:hidden text-2xl">🍔</button>
+                        <h1 class="font-glitch text-2xl md:text-3xl" data-text="#GENERAL_CHAOS">#GENERAL_CHAOS</h1>
+                    </div>
+                    <div class="font-pixel text-xs text-yellow-300 animate-pulse">
+                        CHAOS_LEVEL: 9000%
+                    </div>
+                </header>
+
+                <!-- MESSAGES FEED -->
+                <div id="message-feed" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth pb-24">
+                    
+                    <!-- SYSTEM MSG -->
+                    <div class="text-center my-4">
+                        <span class="bg-yellow-400 text-black px-4 py-1 font-pixel text-xs border-2 border-white inline-block transform -rotate-2">
+                            SYSTEM: WELCOME TO THE VOID
+                        </span>
+                    </div>
+
+                    <!-- MSG 1 -->
+                    <div class="flex gap-4 items-start">
+                        <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="w-12 h-12 border-2 border-white bg-gray-800 object-cover">
+                        <div class="flex flex-col max-w-[80%]">
+                            <span class="font-bold text-pink-400 text-sm mb-1">DogeFather <span class="text-gray-500 text-xs">@ 3:00 AM</span></span>
+                            <div class="message-bubble bg-black p-4 text-lg relative">
+                                Did you guys see the new stonks? 🚀
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MSG 2 -->
+                    <div class="flex gap-4 items-start flex-row-reverse">
+                        <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="w-12 h-12 border-2 border-white bg-blue-900 object-cover grayscale">
+                        <div class="flex flex-col items-end max-w-[80%]">
+                            <span class="font-bold text-yellow-300 text-sm mb-1">YOU (GOD) <span class="text-gray-500 text-xs">@ NOW</span></span>
+                            <div class="message-bubble message-self p-4 text-lg relative">
+                                Literally me rn.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MSG 3 (IMAGE) -->
+                    <div class="flex gap-4 items-start">
+                        <img src="https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif" class="w-12 h-12 border-2 border-white bg-purple-800 object-cover">
+                        <div class="flex flex-col max-w-[80%]">
+                            <span class="font-bold text-green-400 text-sm mb-1">GlitchGawd <span class="text-gray-500 text-xs">@ ETERNAL</span></span>
+                            <div class="message-bubble bg-black p-2 relative">
+                                <img src="https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif" class="w-full max-w-sm border-2 border-white" alt="Meme Placeholder">
+                                <p class="mt-2 font-bold text-center">BOTTOM TEXT</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PLACEHOLDER LOOP -->
+                    <div class="flex gap-4 items-start">
+                        <div class="w-12 h-12 border-2 border-white bg-red-800 flex items-center justify-center text-2xl overflow-hidden">
+                            👹
+                        </div>
+                        <div class="flex flex-col max-w-[80%]">
+                            <span class="font-bold text-red-400 text-sm mb-1">DemonLord69 <span class="text-gray-500 text-xs">@ YESTERDAY</span></span>
+                            <div class="message-bubble bg-black p-4 text-lg relative font-glitch">
+                                THE VOID IS CONSUMING MY WIFI
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- LOGIN FORM -->
-                <form id="form-login" class="flex flex-col gap-4 block">
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">USER_ID_OR_WHATEVER</label>
-                        <input type="text" placeholder="xX_DarkLord_Xx" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-pink-900 focus:ring-4 focus:ring-pink-500 transition-all transform focus:-rotate-1">
-                    </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">SECRET_PASSWORD</label>
-                        <input type="password" placeholder="********" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-blue-900 focus:ring-4 focus:ring-blue-500 transition-all transform focus:rotate-1">
-                    </div>
-                    <button type="submit" class="mt-4 bg-white text-black font-pixel py-4 border-4 border-transparent hover:border-pink-500 hover:text-pink-500 hover:bg-black transition-all text-sm brutal-shadow">
-                        ENTER THE VOID
+                <!-- INPUT AREA -->
+                <div class="h-24 bg-black border-t-4 border-white p-4 flex items-center gap-4 z-30 relative">
+                    <button class="h-12 w-12 border-2 border-white bg-gray-800 text-2xl hover:bg-gray-700 active:scale-95 shadow-[4px_4px_0_#fff]">
+                        📎
                     </button>
-                    <p class="text-center text-xs mt-2 cursor-pointer text-gray-400 hover:text-red-500 hover:underline" onclick="alert('SKILL ISSUE TBH')">Forgot Password?</p>
-                </form>
-
-                <!-- SIGNUP FORM -->
-                <form id="form-signup" class="flex flex-col gap-4 hidden">
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">CHOOSE_NAME</label>
-                        <input type="text" placeholder="CryptoWojak" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-green-900 focus:ring-4 focus:ring-green-500 transition-all">
-                    </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_ADDRESS</label>
-                        <input type="email" placeholder="anon@shadow.net" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-yellow-900 focus:ring-4 focus:ring-yellow-500 transition-all">
-                    </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">SUPER_SECURE_PW</label>
-                        <input type="password" placeholder="password123 (dont)" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-purple-900 focus:ring-4 focus:ring-purple-500 transition-all">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="soul-contract" class="w-6 h-6 border-4 border-white accent-pink-500 bg-gray-800">
-                        <label for="soul-contract" class="text-xs font-bold leading-tight text-gray-300">I agree to sell my soul to the void.</label>
-                    </div>
-                    <button type="submit" class="mt-4 bg-red-800 text-white font-pixel py-4 border-4 border-transparent hover:border-white hover:text-white hover:bg-red-600 transition-all text-sm brutal-shadow animate-pulse">
-                        SACRIFICE & JOIN
+                    <input type="text" placeholder="SCREAM INTO THE VOID..." class="flex-1 h-12 bg-gray-900 border-2 border-white px-4 text-white font-bold focus:outline-none focus:bg-gray-800 focus:shadow-[inset_0_0_10px_#ff00ff] transition-all">
+                    <button class="brutal-btn h-12 px-6 text-sm md:text-lg font-bold hover:bg-pink-500 active:bg-pink-700">
+                        SCREAM
                     </button>
-                </form>
+                </div>
+            </main>
 
-            </div>
+            <!-- RIGHT SIDEBAR (Online Players) -->
+            <aside class="w-72 bg-black flex flex-col z-20 border-l-4 border-white">
+                <div class="p-4 border-b-4 border-white bg-gray-900">
+                     <h2 class="font-pixel text-xs text-pink-400 mb-1">ONLINE_DEGENERATES</h2>
+                     <p class="text-xs text-gray-400">420 SOULS TRAPPED</p>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- User 1 -->
+                    <div class="user-item flex items-center gap-3 cursor-pointer transition-transform">
+                        <div class="relative">
+                            <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="w-10 h-10 border-2 border-white bg-yellow-500 object-cover">
+                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-black"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-green-400">DogeFather</p>
+                            <p class="text-[10px] text-gray-500">Hodling...</p>
+                        </div>
+                    </div>
+
+                    <!-- User 2 -->
+                    <div class="user-item flex items-center gap-3 cursor-pointer transition-transform">
+                        <div class="relative">
+                            <img src="https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif" class="w-10 h-10 border-2 border-white bg-purple-500 object-cover">
+                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-black animate-pulse"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-purple-400">GlitchGawd</p>
+                            <p class="text-[10px] text-gray-500">Glitching out</p>
+                        </div>
+                    </div>
+
+                    <!-- User 3 -->
+                    <div class="user-item flex items-center gap-3 cursor-pointer transition-transform">
+                        <div class="relative">
+                            <div class="w-10 h-10 border-2 border-white bg-red-700 flex items-center justify-center">👹</div>
+                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 border-2 border-black"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-red-500">Slayer_666</p>
+                            <p class="text-[10px] text-gray-500">In the pit</p>
+                        </div>
+                    </div>
+
+                     <!-- User 4 -->
+                     <div class="user-item flex items-center gap-3 cursor-pointer transition-transform">
+                        <div class="relative">
+                            <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="w-10 h-10 border-2 border-white bg-gray-500 object-cover">
+                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-500 border-2 border-black"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-white">Lurker_Noob</p>
+                            <p class="text-[10px] text-gray-500">Staring...</p>
+                        </div>
+                    </div>
+
+                    <!-- User 5 -->
+                     <div class="user-item flex items-center gap-3 cursor-pointer transition-transform opacity-50">
+                        <div class="relative">
+                            <div class="w-10 h-10 border-2 border-white bg-blue-500 flex items-center justify-center">🥶</div>
+                            <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-gray-500 border-2 border-black"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-blue-300">IceKing</p>
+                            <p class="text-[10px] text-gray-500">Offline</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="p-4 border-t-4 border-white bg-gray-900">
+                    <button onclick="window.location.href='index.html'" class="w-full border-2 border-white p-2 font-pixel text-xs bg-red-600 hover:bg-red-500 text-white shadow-[3px_3px_0_white] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                        RAGE_QUIT
+                    </button>
+                </div>
+            </aside>
+
         </div>
     </div>
 
-    <!-- MARQUEE FOOTER (Scaled specifically to cover width) -->
-    <div class="marquee-container transform scale-[0.8] origin-bottom w-[125%] left-[-12.5%]">
-        <marquee scrollamount="12" scrolldelay="100">
-            WARNING: DARK MODE ACTIVATED /// PROTECT YOUR EYES /// THE VOID STARES BACK /// NO REFUNDS ON SOULS /// CHAOS REIGNS ETERNAL
-        </marquee>
-    </div>
-
-    <!-- AUDIO (Fake/Simulated) -->
-    <div class="fixed bottom-20 right-4 z-50 transform scale-[0.8] origin-bottom-right">
-        <button onclick="toggleChaos()" class="bg-gray-900 text-white border-4 border-white p-2 rounded-full shadow-lg hover:rotate-12 transition-transform">
-            🤡 CHAOS MODE
-        </button>
-    </div>
+    <!-- BACKGROUND FLOATING IMAGES (Decor) -->
+    <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="floating-img top-10 right-10 w-24" style="animation: spin 10s linear infinite;">
+    <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="floating-img bottom-40 left-10 w-32 filter grayscale contrast-200">
 
     <script>
-        // --- DOM ELEMENTS ---
-        const btnLogin = document.getElementById('btn-login');
-        const btnSignup = document.getElementById('btn-signup');
-        const formLogin = document.getElementById('form-login');
-        const formSignup = document.getElementById('form-signup');
-        const body = document.body;
-        const container = document.querySelector('.form-container');
+        // --- AUTO SCROLL BOTTOM ---
+        const feed = document.getElementById('message-feed');
+        feed.scrollTop = feed.scrollHeight;
 
-        // --- SOUND EFFECTS (Synthesized) ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-
-        function beep(freq = 440, type = 'square') {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        // --- TOGGLE LOGIC ---
-        function switchTab(isLogin) {
-            beep(isLogin ? 600 : 300, 'sawtooth');
-            if (isLogin) {
-                formLogin.classList.remove('hidden');
-                formLogin.classList.add('flex'); // restore flex
-                formSignup.classList.add('hidden');
-                formSignup.classList.remove('flex');
+        // --- INPUT FX ---
+        const input = document.querySelector('input');
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                const text = input.value;
+                if(!text) return;
                 
-                btnLogin.classList.add('bg-yellow-400', 'text-black', 'border-r-4');
-                btnLogin.classList.remove('bg-gray-700', 'text-gray-400');
+                // Add fake message
+                const msg = document.createElement('div');
+                msg.className = "flex gap-4 items-start flex-row-reverse animate-bounce";
+                msg.innerHTML = `
+                    <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="w-12 h-12 border-2 border-white bg-blue-900 object-cover grayscale">
+                    <div class="flex flex-col items-end max-w-[80%]">
+                        <span class="font-bold text-yellow-300 text-sm mb-1">YOU <span class="text-gray-500 text-xs">@ NOW</span></span>
+                        <div class="message-bubble message-self p-4 text-lg relative bg-black border-white shadow-[6px_6px_0_white]">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(msg);
+                input.value = '';
+                feed.scrollTop = feed.scrollHeight;
                 
-                btnSignup.classList.add('bg-gray-700', 'text-gray-400');
-                btnSignup.classList.remove('bg-yellow-400', 'text-black');
-            } else {
-                formLogin.classList.add('hidden');
-                formLogin.classList.remove('flex');
-                formSignup.classList.remove('hidden');
-                formSignup.classList.add('flex'); // restore flex
-
-                btnSignup.classList.add('bg-yellow-400', 'text-black');
-                btnSignup.classList.remove('bg-gray-700', 'text-gray-400');
-
-                btnLogin.classList.add('bg-gray-700', 'text-gray-400', 'border-r-4');
-                btnLogin.classList.remove('bg-yellow-400', 'text-black');
+                // Beep
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ac = new AudioContext();
+                const osc = ac.createOscillator();
+                const g = ac.createGain();
+                osc.connect(g);
+                g.connect(ac.destination);
+                osc.type='sawtooth';
+                osc.frequency.setValueAtTime(150, ac.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.5);
+                osc.start();
+                osc.stop(ac.currentTime + 0.5);
             }
-            
-            // Random Tilt on switch
-            const rot = Math.random() * 10 - 5;
-            container.style.transform = `rotate(${rot}deg) scale(1.02)`;
-            setTimeout(() => {
-                container.style.transform = `rotate(0deg) scale(1)`;
-            }, 200);
-        }
-
-        btnLogin.addEventListener('click', () => switchTab(true));
-        btnSignup.addEventListener('click', () => switchTab(false));
-
-        // --- EMOJI RAIN ---
-        const emojis = ['🌑', '🕸️', '🔮', '💀', '🦇', '👾', '👁️', '⚡', '💊', '🛸', '🥀'];
-        
-        function spawnEmoji() {
-            const el = document.createElement('div');
-            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            el.className = 'floating-emoji';
-            el.style.left = Math.random() * 100 + 'vw';
-            el.style.bottom = '-50px';
-            el.style.fontSize = (Math.random() * 2 + 1) + 'rem';
-            document.getElementById('emoji-container').appendChild(el);
-
-            setTimeout(() => { el.remove(); }, 3000);
-        }
-
-        setInterval(spawnEmoji, 800);
-
-        // --- INPUT CHAOS ---
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('input', () => {
-                spawnEmoji();
-                spawnEmoji();
-                // Random neon border color on container
-                if (Math.random() > 0.8) {
-                    const colors = ['#ffffff', '#ff00ff', '#00ffff', '#ffff00', '#00ff00'];
-                    container.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-                }
-            });
-            input.addEventListener('focus', () => {
-                beep(800, 'sine');
-            });
         });
 
-        // --- FORM SUBMIT MOCK ---
-        const handleSubmit = (e) => {
-            e.preventDefault();
-            beep(100, 'square');
-            beep(150, 'square');
-            beep(200, 'square');
-            
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = "SUMMONING DAEMONS...";
-            btn.disabled = true;
-            btn.classList.add('cursor-wait');
-
-            // Shake screen
-            body.style.animation = "shake 0.5s infinite";
-
-            setTimeout(() => {
-                body.style.animation = "";
-                // REDIRECT TO CHAT.HTML HERE
-                window.location.href = "chat.html";
-            }, 2000);
-        };
-
-        formLogin.addEventListener('submit', handleSubmit);
-        formSignup.addEventListener('submit', handleSubmit);
-
-        // --- CHAOS MODE ---
-        let chaosInterval;
-        function toggleChaos() {
-            const btn = document.querySelector('button[onclick="toggleChaos()"]');
-            if (chaosInterval) {
-                clearInterval(chaosInterval);
-                chaosInterval = null;
-                document.body.style.filter = "none";
-                btn.innerText = "🤡 CHAOS MODE";
-                alert("Boring mode activated.");
-            } else {
-                btn.innerText = "🛑 STOP THE PAIN";
-                chaosInterval = setInterval(() => {
-                    const hue = Math.random() * 360;
-                    document.body.style.filter = `hue-rotate(${hue}deg) contrast(1.5) invert(0.1)`;
-                    const x = Math.random() * 10 - 5;
-                    const y = Math.random() * 10 - 5;
-                    document.body.style.transform = `translate(${x}px, ${y}px)`;
-                }, 100);
-                beep(50, 'sawtooth');
+        // --- RANDOM GLITCH FX ---
+        setInterval(() => {
+            const bubbles = document.querySelectorAll('.message-bubble');
+            const target = bubbles[Math.floor(Math.random() * bubbles.length)];
+            if(target) {
+                target.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
+                setTimeout(() => target.style.transform = 'none', 100);
             }
-        }
-
-        // --- MOUSE TRACKING EYES (WHITE SHADOW) ---
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth - e.pageX) / 50;
-            const y = (window.innerHeight - e.pageY) / 50;
-            container.style.boxShadow = `${x}px ${y}px 0px 0px #ffffff`;
-        });
+        }, 1000);
 
     </script>
 </body>
