@@ -60,20 +60,21 @@
         }
 
         /* Specific Chat Styles */
+        /* REMOVED BUBBLE STYLING AS REQUESTED */
         .message-bubble {
-            border: 2px solid white;
-            box-shadow: 4px 4px 0px #ff00ff;
-            transition: transform 0.1s;
+            padding: 2px 0;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            width: 100%;
         }
-        .message-bubble:hover {
-            transform: scale(1.02);
-            box-shadow: 2px 2px 0px #00ffff;
-        }
-        .message-self {
-            border-color: #ffff00;
-            box-shadow: 4px 4px 0px #ffffff;
-            align-self: flex-end;
-            background: #222;
+        
+        /* Force left align always */
+        .message-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            width: 100%;
         }
 
         .brutal-btn {
@@ -158,7 +159,6 @@
         }
         
         .username-link:hover {
-            color: #ffff00;
             text-decoration: underline;
             cursor: pointer;
         }
@@ -311,7 +311,7 @@
         .bg-theme-35 { background: linear-gradient(to bottom, #000 0%, #020 100%); border: 2px solid green; }
         .bg-theme-36 { background: linear-gradient(to bottom, #000 0%, #002 100%); border: 2px solid blue; }
         .bg-theme-37 { background: #000 url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIiAvPgo8cGF0aCBkPSJNMCAwTDggOFpNOCAwTDAgOFoiIHN0cm9rZT0iIzIyMiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjwvc3ZnPg=='); }
-        .bg-theme-38 { background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); filter: blur(20px) opacity(0.5); }
+        .bg-theme-38 { background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f0f, #f00); filter: blur(20px) opacity(0.5); }
         .bg-theme-39 { background: #222; box-shadow: inset 0 0 50px #000; }
         .bg-theme-40 { background: linear-gradient(45deg, black, #333); }
         /* Animated */
@@ -438,6 +438,58 @@
         .bio-fx-48 { color: #fff; background: #000; mix-blend-mode: difference; }
         .bio-fx-49 { background: linear-gradient(90deg, red, blue); -webkit-background-clip: text; color: transparent; }
         .bio-fx-50 { font-family: 'Wingdings'; } /* Chaos option */
+
+        /* --- TEXT COLOR OPTIONS --- */
+        .msg-text-1 { color: #ffffff; }
+        .msg-text-2 { color: #00ff00; }
+        .msg-text-3 { color: #ff00ff; }
+        .msg-text-4 { color: #00ffff; }
+        .msg-text-5 { color: #ffff00; }
+        .msg-text-6 { color: #ff0000; }
+        .msg-text-7 { color: #0000ff; }
+        .msg-text-8 { color: #ffa500; }
+        .msg-text-9 { color: #800080; }
+        .msg-text-10 { color: #ffc0cb; }
+        .msg-text-11 { color: #a52a2a; }
+        .msg-text-12 { color: #808080; }
+        .msg-text-13 { color: #c0c0c0; }
+        .msg-text-14 { color: #ffd700; }
+        .msg-text-15 { color: #adff2f; }
+        .msg-text-16 { color: #00fa9a; }
+        .msg-text-17 { color: #00ced1; }
+        .msg-text-18 { color: #4682b4; }
+        .msg-text-19 { color: #da70d6; }
+        .msg-text-20 { color: #ff1493; }
+        .msg-text-21 { color: #dc143c; }
+        .msg-text-22 { color: #ff4500; }
+        .msg-text-23 { color: #2e8b57; }
+        .msg-text-24 { color: #20b2aa; }
+        .msg-text-25 { color: #1e90ff; }
+        .msg-text-26 { color: #9370db; }
+        .msg-text-27 { color: #7b68ee; }
+        .msg-text-28 { color: #6a5acd; }
+        .msg-text-29 { color: #483d8b; }
+        .msg-text-30 { color: #191970; }
+        .msg-text-31 { color: #d2691e; }
+        .msg-text-32 { color: #8b4513; }
+        .msg-text-33 { color: #f4a460; }
+        .msg-text-34 { color: #d8bfd8; }
+        .msg-text-35 { color: #dda0dd; }
+        .msg-text-36 { color: #ee82ee; }
+        .msg-text-37 { color: #f0e68c; }
+        .msg-text-38 { color: #bdb76b; }
+        .msg-text-39 { color: #9acd32; }
+        .msg-text-40 { color: #6b8e23; }
+        .msg-text-41 { color: #556b2f; }
+        .msg-text-42 { color: #008080; }
+        .msg-text-43 { color: #48d1cc; }
+        .msg-text-44 { color: #00bfff; }
+        .msg-text-45 { color: #87ceeb; }
+        .msg-text-46 { color: #b0c4de; }
+        .msg-text-47 { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); -webkit-background-clip: text; color: transparent; animation: rainbow-text 5s infinite; font-weight: bold; }
+        .msg-text-48 { text-shadow: 0 0 5px #fff; }
+        .msg-text-49 { background: linear-gradient(to right, #ff00ff, #00ffff); -webkit-background-clip: text; color: transparent; font-weight: bold; }
+        .msg-text-50 { color: #333; -webkit-text-stroke: 0.5px white; }
 
     </style>
 </head>
@@ -1086,11 +1138,17 @@
         
         function renderPMBubble(container, msg, isIncoming) {
             const bubbleRow = document.createElement('div');
-            bubbleRow.className = `flex gap-2 mb-2 ${isIncoming ? '' : 'flex-row-reverse'}`;
+            // Force Left Align for everyone
+            bubbleRow.className = `flex gap-2 mb-2 w-full`;
             
             const pfp = isIncoming ? (msg.pfpURL || DEFAULT_AVATAR) : (currentUserPfp || DEFAULT_AVATAR);
-            const name = isIncoming ? msg.senderName : "YOU";
+            const name = isIncoming ? msg.senderName : currentUser.displayName;
             
+            // Retrieve Styles from Message
+            const savedStyles = msg.profileStyles || {};
+            const nameStyle = savedStyles.name || '';
+            const textColor = savedStyles.textColor || '';
+
             let imageHTML = '';
             if (msg.imageURL) {
                 imageHTML = `<img src="${msg.imageURL}" class="max-w-[150px] border-2 border-white cursor-pointer hover:opacity-80 mb-1" onclick="window.openLightbox(this.src)">`;
@@ -1098,9 +1156,9 @@
 
             bubbleRow.innerHTML = `
                 <img src="${pfp}" class="w-6 h-6 rounded-full border border-white self-start mt-1">
-                <div class="flex flex-col ${isIncoming ? 'items-start' : 'items-end'} max-w-[75%]">
-                    <span class="text-[8px] text-gray-400 mb-0.5">${name}</span>
-                    <div class="p-2 text-xs rounded break-words ${isIncoming ? 'bg-gray-800 text-left border border-gray-600' : 'bg-purple-900 text-right border border-purple-500'}">
+                <div class="flex flex-col items-start max-w-[90%]">
+                    <span class="text-[8px] text-gray-400 mb-0.5 font-bold ${nameStyle}">${name}</span>
+                    <div class="message-bubble ${textColor} text-xs break-words">
                         ${imageHTML}
                         ${msg.text ? `<div>${escapeHtml(msg.text)}</div>` : ''}
                     </div>
@@ -1301,6 +1359,7 @@
                         text: text,
                         imageURL: image || null,
                         pfpURL: currentUserPfp,
+                        profileStyles: myProfileStyles || {}, // Save styles
                         createdAt: serverTimestamp()
                     });
                 } catch(e) {
@@ -1512,7 +1571,8 @@
                     }
                     
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
+                    // Force left align
+                    msgDiv.className = "message-container";
                     
                     const pfpSrc = data.pfpURL || DEFAULT_AVATAR;
                     const avatarHTML = `<img src="${pfpSrc}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
@@ -1525,7 +1585,15 @@
                         processedText = processedText.replace(regex, `<span class="glow-text">${myName}</span>`);
                     }
 
-                    const displayNameHTML = `<span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1 username-link" onclick="window.tagUser('${data.displayName}')">${isSelf ? 'YOU' : (data.displayName || 'ANON')}</span>`;
+                    // Retrieve Styles stored on the message document
+                    const savedStyles = data.profileStyles || {};
+                    const nameStyle = savedStyles.name || '';
+                    const textColor = savedStyles.textColor || '';
+
+                    // Display actual name, not YOU
+                    const displayName = data.displayName || 'ANON';
+                    
+                    const displayNameHTML = `<span class="font-bold text-xs mb-1 username-link ${nameStyle}" onclick="window.tagUser('${displayName}')">${displayName}</span>`;
 
                     let imageHTML = '';
                     if (data.imageURL) {
@@ -1534,10 +1602,12 @@
 
                     msgDiv.innerHTML = `
                         ${avatarHTML}
-                        <div class="flex flex-col ${isSelf ? 'items-end' : ''} max-w-[85%]">
-                            ${displayNameHTML} 
-                            <span class="text-gray-500 text-[10px]">@ ${date}</span>
-                            <div class="message-bubble ${isSelf ? 'message-self bg-black shadow-[4px_4px_0_white]' : 'bg-black'} p-2 text-sm relative flex flex-col">
+                        <div class="flex flex-col items-start max-w-[85%]">
+                            <div class="flex items-baseline gap-2">
+                                ${displayNameHTML} 
+                                <span class="text-gray-500 text-[10px]">${date}</span>
+                            </div>
+                            <div class="message-bubble ${textColor} text-sm relative flex flex-col items-start">
                                 ${processedText}
                                 ${imageHTML}
                             </div>
@@ -1655,7 +1725,8 @@
                     uid: currentUser.uid,
                     displayName: currentUser.displayName || 'Anon',
                     createdAt: serverTimestamp(),
-                    pfpURL: currentUserPfp
+                    pfpURL: currentUserPfp,
+                    profileStyles: myProfileStyles || {} // Save current styles to message
                 });
             } catch (e) {
                 addNotification("MESSAGE LOST IN VOID", "error");
