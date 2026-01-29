@@ -121,6 +121,16 @@
             100% { opacity: 1; transform: scale(1) translate(-50%, -50%); }
         }
         
+        /* MODAL EXPANSION */
+        #modal-content-container {
+            transition: max-width 0.3s, height 0.3s;
+        }
+        #modal-content-container.modal-expanded {
+            max-width: 64rem !important; /* max-w-4xl */
+            width: 95vw;
+            height: 80vh;
+        }
+        
         .edit-overlay {
             transition: opacity 0.2s;
         }
@@ -387,58 +397,6 @@
         @keyframes hue-spin { 100% {filter: hue-rotate(360deg)} }
         .name-fx-50 { display: inline-block; transform: rotate(5deg); border: 1px solid white; padding: 1px; background: red; color: white; }
 
-        /* --- BIO STYLES --- */
-        .bio-fx-1 { font-family: sans-serif; }
-        .bio-fx-2 { font-family: 'Press Start 2P'; font-size: 0.8em; line-height: 1.5; }
-        .bio-fx-3 { font-family: 'Comic Neue'; font-weight: bold; }
-        .bio-fx-4 { font-family: monospace; color: #00ff00; }
-        .bio-fx-5 { font-family: serif; font-style: italic; color: #ffaaff; }
-        .bio-fx-6 { color: #888; }
-        .bio-fx-7 { color: #fff; text-align: center; }
-        .bio-fx-8 { color: #ff00ff; text-align: right; }
-        .bio-fx-9 { border-left: 2px solid white; padding-left: 5px; }
-        .bio-fx-10 { border-right: 2px solid red; padding-right: 5px; text-align: right; }
-        .bio-fx-11 { background: #111; padding: 5px; border: 1px solid #333; }
-        .bio-fx-12 { background: #222; color: #00ff00; padding: 5px; font-family: monospace; }
-        .bio-fx-13 { text-shadow: 1px 1px 0 #000; }
-        .bio-fx-14 { text-shadow: 0 0 5px #ff00ff; }
-        .bio-fx-15 { letter-spacing: 1px; }
-        .bio-fx-16 { font-family: 'Rubik Glitch'; }
-        .bio-fx-17 { font-family: 'Creepster'; color: #aa0000; }
-        .bio-fx-18 { font-family: 'VT323'; font-size: 1.2em; }
-        .bio-fx-19 { font-family: 'Orbitron'; font-size: 0.8em; color: #00ffff; }
-        .bio-fx-20 { font-family: 'Rye'; }
-        .bio-fx-21 { text-decoration: underline; }
-        .bio-fx-22 { text-decoration: line-through; }
-        .bio-fx-23 { background: linear-gradient(to right, #000, #222); padding: 5px; }
-        .bio-fx-24 { border: 1px dashed #555; padding: 5px; }
-        .bio-fx-25 { color: yellow; }
-        .bio-fx-26 { color: cyan; }
-        .bio-fx-27 { color: magenta; }
-        .bio-fx-28 { transform: rotate(1deg); }
-        .bio-fx-29 { transform: rotate(-1deg); }
-        .bio-fx-30 { font-weight: 100; }
-        .bio-fx-31 { font-weight: 900; }
-        .bio-fx-32 { color: transparent; -webkit-text-stroke: 0.5px white; }
-        .bio-fx-33 { background: rgba(255,255,255,0.1); padding: 5px; }
-        .bio-fx-34 { background: rgba(255,0,0,0.1); padding: 5px; border: 1px solid red; }
-        .bio-fx-35 { background: rgba(0,255,0,0.1); padding: 5px; border: 1px solid green; }
-        .bio-fx-36 { background: rgba(0,0,255,0.1); padding: 5px; border: 1px solid blue; }
-        .bio-fx-37 { border-top: 1px solid white; border-bottom: 1px solid white; padding: 5px 0; }
-        .bio-fx-38 { font-variant: small-caps; }
-        .bio-fx-39 { word-spacing: 5px; }
-        .bio-fx-40 { opacity: 0.5; transition: opacity 0.2s; } .bio-fx-40:hover { opacity: 1; }
-        .bio-fx-41 { animation: pulse-name 2s infinite; }
-        .bio-fx-42 { animation: rainbow-text 5s infinite; }
-        .bio-fx-43 { animation: glitch-anim 5s infinite; }
-        .bio-fx-44 { background: repeating-linear-gradient(45deg, #000, #000 5px, #111 5px, #111 10px); padding: 5px; }
-        .bio-fx-45 { border-radius: 10px; border: 1px solid white; padding: 5px; }
-        .bio-fx-46 { box-shadow: 5px 5px 0 #333; background: #000; padding: 5px; border: 1px solid #555; }
-        .bio-fx-47 { filter: blur(0.3px); }
-        .bio-fx-48 { color: #fff; background: #000; mix-blend-mode: difference; }
-        .bio-fx-49 { background: linear-gradient(90deg, red, blue); -webkit-background-clip: text; color: transparent; }
-        .bio-fx-50 { font-family: 'Wingdings'; } /* Chaos option */
-
         /* --- TEXT COLOR OPTIONS --- */
         .msg-text-1 { color: #ffffff; }
         .msg-text-2 { color: #00ff00; }
@@ -701,7 +659,7 @@
            </div>
            
            <!-- Customization Container (Injected via JS) -->
-           <div id="customization-view" class="h-[400px] flex flex-col hidden"></div>
+           <div id="customization-view" class="h-full flex-col hidden"></div>
         </div>
       </div>
 
@@ -1750,6 +1708,10 @@
         window.openProfile = async (uid) => {
             currentProfileUid = uid;
             modal.classList.remove('hidden');
+            
+            // Remove expanded state by default
+            modalContainer.classList.remove('modal-expanded');
+            
             beep(300);
             
             // Reset Views
@@ -1823,6 +1785,7 @@
                         btnCustomize.onclick = () => {
                             profileView.classList.add('hidden');
                             customizationView.classList.remove('hidden');
+                            modalContainer.classList.add('modal-expanded'); // Expand modal size
                             initCustomizationUI(customizationView, currentUser, db, data.profileStyles || {});
                         };
                     }
