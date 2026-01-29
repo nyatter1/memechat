@@ -348,6 +348,17 @@
         @keyframes scanline { 0% {background-position: 0 0;} 100% {background-position: 0 4px;} }
         .bg-theme-49 { background: #000; border: 2px solid white; box-shadow: 0 0 20px #fff; }
         .bg-theme-50 { background: url('https://media.giphy.com/media/U3qYN8S0j3bpK/giphy.gif'); background-size: cover; opacity: 0.8; }
+        /* NEW BG THEMES */
+        .bg-theme-51 { background: radial-gradient(circle at 10% 20%, rgb(0, 0, 0) 0%, rgb(64, 64, 64) 90.2%); }
+        .bg-theme-52 { background: linear-gradient(to right, #434343 0%, black 100%); }
+        .bg-theme-53 { background: linear-gradient(to top, #09203f 0%, #537895 100%); }
+        .bg-theme-54 { background: radial-gradient(circle at center, #2b32b2, #1488cc); }
+        .bg-theme-55 { background: linear-gradient(to right, #ec008c, #fc6767); }
+        .bg-theme-56 { background: linear-gradient(to right, #141e30, #243b55); }
+        .bg-theme-57 { background: repeating-linear-gradient(135deg, #000, #000 5px, #222 5px, #222 10px); }
+        .bg-theme-58 { background: linear-gradient(to bottom, #323232 0%, #3F3F3F 40%, #1C1C1C 150%); }
+        .bg-theme-59 { background: conic-gradient(at 0% 30%, red 10%, yellow 30%, #1e90ff 50%); }
+        .bg-theme-60 { background-color: #000000; background-image: linear-gradient(315deg, #000000 0%, #414141 74%); }
 
         /* --- USERNAME EFFECTS --- */
         .name-fx-1 { color: #fff; }
@@ -407,6 +418,17 @@
         .name-fx-49 { filter: hue-rotate(0deg); animation: hue-spin 5s infinite; color: red; }
         @keyframes hue-spin { 100% {filter: hue-rotate(360deg)} }
         .name-fx-50 { display: inline-block; transform: rotate(5deg); border: 1px solid white; padding: 1px; background: red; color: white; }
+        /* NEW NAME EFFECTS */
+        .name-fx-51 { color: #FFD700; text-shadow: 2px 2px 0px #000000; letter-spacing: 2px; }
+        .name-fx-52 { background: linear-gradient(to bottom, #33ccff 0%, #ff99cc 100%); -webkit-background-clip: text; color: transparent; font-family: 'Comic Neue'; font-weight: 800; }
+        .name-fx-53 { border: 2px solid #fff; padding: 2px 5px; border-radius: 5px; background-color: #000; }
+        .name-fx-54 { text-decoration: line-through; text-decoration-color: red; text-decoration-thickness: 3px; }
+        .name-fx-55 { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073; color: white; }
+        .name-fx-56 { font-style: italic; text-transform: lowercase; color: #888; }
+        .name-fx-57 { background-color: yellow; color: black; padding: 0 2px; }
+        .name-fx-58 { color: transparent; -webkit-text-stroke: 1px cyan; }
+        .name-fx-59 { display: inline-block; transform: scaleY(1.5); color: #ff4500; }
+        .name-fx-60 { letter-spacing: 5px; color: #00ff00; filter: blur(0.5px); }
 
         /* --- BIO STYLES --- */
         .bio-fx-1 { font-family: sans-serif; }
@@ -459,6 +481,17 @@
         .bio-fx-48 { color: #fff; background: #000; mix-blend-mode: difference; }
         .bio-fx-49 { background: linear-gradient(90deg, red, blue); -webkit-background-clip: text; color: transparent; }
         .bio-fx-50 { font-family: 'Wingdings'; } /* Chaos option */
+        /* NEW BIO STYLES */
+        .bio-fx-51 { background: #333; color: #fff; padding: 10px; border-radius: 20px; border-bottom-left-radius: 0; }
+        .bio-fx-52 { border: 2px solid #00ff00; padding: 5px; color: #00ff00; background: rgba(0, 255, 0, 0.1); }
+        .bio-fx-53 { font-family: 'Courier New', Courier, monospace; letter-spacing: -1px; }
+        .bio-fx-54 { text-align: justify; }
+        .bio-fx-55 { color: #ff69b4; font-weight: bold; }
+        .bio-fx-56 { background: linear-gradient(45deg, #000, #222); border: 1px solid #444; padding: 5px; box-shadow: 3px 3px 0 #666; }
+        .bio-fx-57 { transform: skewX(-15deg); display: inline-block; border-left: 3px solid cyan; padding-left: 10px; }
+        .bio-fx-58 { text-shadow: 2px 2px 4px #000000; }
+        .bio-fx-59 { border-top: 2px dashed #fff; border-bottom: 2px dashed #fff; padding: 5px 0; }
+        .bio-fx-60 { color: transparent; text-shadow: 0 0 0 white; opacity: 0.5; }
 
         /* --- TEXT COLOR OPTIONS --- */
         .msg-text-1 { color: #ffffff; }
@@ -852,13 +885,13 @@
         // ==========================================
         // CUSTOMIZATION LOGIC (INLINED)
         // ==========================================
-        const bgOptions = Array.from({ length: 50 }, (_, i) => ({ id: `bg-theme-${i + 1}`, name: `Theme ${i + 1}` }));
+        const bgOptions = Array.from({ length: 60 }, (_, i) => ({ id: `bg-theme-${i + 1}`, name: `Theme ${i + 1}` }));
         bgOptions[0].name = "Void Black"; bgOptions[1].name = "Matrix Code"; bgOptions[2].name = "Cyber Grid"; bgOptions[3].name = "Lava Lamp"; bgOptions[4].name = "Deep Space"; bgOptions[49].name = "Glitch Storm";
 
-        const nameOptions = Array.from({ length: 50 }, (_, i) => ({ id: `name-fx-${i + 1}`, name: `Effect ${i + 1}` }));
+        const nameOptions = Array.from({ length: 60 }, (_, i) => ({ id: `name-fx-${i + 1}`, name: `Effect ${i + 1}` }));
         nameOptions[0].name = "Standard"; nameOptions[1].name = "Neon Pink"; nameOptions[2].name = "Gold Leaf"; nameOptions[3].name = "Ice Shimmer"; nameOptions[49].name = "Corrupted";
 
-        const bioOptions = Array.from({ length: 50 }, (_, i) => ({ id: `bio-fx-${i + 1}`, name: `Style ${i + 1}` }));
+        const bioOptions = Array.from({ length: 60 }, (_, i) => ({ id: `bio-fx-${i + 1}`, name: `Style ${i + 1}` }));
         bioOptions[0].name = "Standard"; bioOptions[1].name = "Terminal Green"; bioOptions[2].name = "Gothic Red"; bioOptions[49].name = "Rainbow Wave";
 
         function applyProfileStyles(modalElement, styles) {
@@ -896,7 +929,7 @@
             };
 
             const header = document.createElement('div');
-            header.className = "flex border-b-2 border-white bg-black";
+            header.className = "flex border-b-2 border-white bg-black flex-shrink-0";
             
             const tabs = ['BACKGROUND', 'NAME_FX', 'BIO_STYLE'];
             let activeTab = 'BACKGROUND';
@@ -943,7 +976,7 @@
                     } else if (activeTab === 'BIO_STYLE') {
                          const span = document.createElement('span');
                         span.className = `font-bold text-[8px] p-1 text-left w-full h-full overflow-hidden ${opt.id}`;
-                        span.innerText = "Lore goes here...";
+                        span.innerText = "Lore...";
                         previewBox.appendChild(span);
                     }
                     
@@ -971,7 +1004,7 @@
             };
 
             const footer = document.createElement('div');
-            footer.className = "border-t-2 border-white p-2 flex justify-end bg-black";
+            footer.className = "border-t-2 border-white p-2 flex justify-end bg-black flex-shrink-0";
             const closeBtn = document.createElement('button');
             closeBtn.innerText = "DONE";
             closeBtn.className = "brutal-btn px-4 py-1 text-[10px]";
@@ -1919,18 +1952,15 @@
             currentProfileUid = uid;
             modal.classList.remove('hidden');
             
-            // RESET LAYOUT TO DEFAULT (NARROW)
-            modalContainer.classList.remove('max-w-5xl');
-            modalContainer.classList.add('max-w-md');
+            // RESET LAYOUT TO DEFAULT (NARROW) - HARD RESET TO PREVENT GLITCHES
+            modalContainer.className = "bg-gray-900 border-4 border-white w-full max-w-md transition-all duration-300 flex flex-col md:flex-row overflow-hidden brutal-shadow relative mx-4 max-h-[90vh]";
             
-            // RESET VIEWS
-            // Ensure preview is visible and takes full width initially
-            profileView.classList.remove('hidden', 'w-80', 'border-r-4');
-            profileView.classList.add('w-full');
+            // RESET VIEWS - HARD RESET
+            profileView.className = "w-full flex-shrink-0 flex flex-col relative transition-all duration-300 overflow-y-auto";
             
-            // Hide Customization
-            customizationView.classList.add('hidden');
-            customizationView.innerHTML = ''; // Clear old instance
+            // HIDE CUSTOMIZATION - HARD RESET
+            customizationView.className = "hidden flex-1 flex flex-col bg-gray-900 h-full overflow-hidden border-t-4 md:border-t-0 md:border-l-4 border-white min-w-[300px] md:w-[400px]";
+            customizationView.innerHTML = ''; 
 
             beep(300);
             
