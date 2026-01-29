@@ -1579,7 +1579,10 @@
             handle.onmousedown = dragMouseDown;
 
             function dragMouseDown(e) {
-                // FIXED PINNING BUG: Check for pinned class
+                // BUG FIX: Don't drag if clicking buttons (close/pin) or input
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+                
+                // Check for pinned class
                 if (el.classList.contains('pinned')) return;
 
                 e.preventDefault();
@@ -1844,15 +1847,18 @@
             input.focus();
         };
 
-        // Fetch all users to get styles for the Online List
+        // Fetch all users to get styles and PFPs for the Online List (Active syncing)
         function updateOnlineListStylesListener() {
             onSnapshot(collection(db, "users"), (snapshot) => {
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if(activeUsersMap.has(doc.id)) {
+                        const current = activeUsersMap.get(doc.id);
                         activeUsersMap.set(doc.id, {
-                            ...activeUsersMap.get(doc.id),
-                            profileStyles: data.profileStyles
+                            ...current,
+                            pfp: data.pfpURL || current.pfp, // Update PFP from profile
+                            name: data.displayName || current.name, // Update Name from profile
+                            profileStyles: data.profileStyles // Update Styles from profile
                         });
                     }
                 });
@@ -1930,6 +1936,7 @@
                     profileStyles: myProfileStyles || {} // Save current styles to message
                 });
             } catch (e) {
+                console.error(e);
                 addNotification("MESSAGE LOST IN VOID", "error");
             }
         }
@@ -1948,19 +1955,24 @@
 
         // --- PROFILE LOGIC ---
         
+        // HELPER TO RESET MODAL STATE
+        function resetModalLayout() {
+            // Reset Container classes to default narrow mode
+            modalContainer.className = "bg-gray-900 border-4 border-white w-full max-w-md transition-all duration-300 flex flex-col md:flex-row overflow-hidden brutal-shadow relative mx-4 max-h-[90vh]";
+            
+            // Reset Profile View classes
+            profileView.className = "w-full md:w-full flex-shrink-0 flex flex-col relative transition-all duration-300 overflow-y-auto";
+            
+            // Hide Customization View and clear it
+            customizationView.className = "hidden flex-1 flex flex-col bg-gray-900 h-full overflow-hidden border-t-4 md:border-t-0 md:border-l-4 border-white min-w-[300px] md:w-[400px]";
+            customizationView.innerHTML = '';
+        }
+
         window.openProfile = async (uid) => {
             currentProfileUid = uid;
             modal.classList.remove('hidden');
             
-            // RESET LAYOUT TO DEFAULT (NARROW) - HARD RESET TO PREVENT GLITCHES
-            modalContainer.className = "bg-gray-900 border-4 border-white w-full max-w-md transition-all duration-300 flex flex-col md:flex-row overflow-hidden brutal-shadow relative mx-4 max-h-[90vh]";
-            
-            // RESET VIEWS - HARD RESET
-            profileView.className = "w-full flex-shrink-0 flex flex-col relative transition-all duration-300 overflow-y-auto";
-            
-            // HIDE CUSTOMIZATION - HARD RESET
-            customizationView.className = "hidden flex-1 flex flex-col bg-gray-900 h-full overflow-hidden border-t-4 md:border-t-0 md:border-l-4 border-white min-w-[300px] md:w-[400px]";
-            customizationView.innerHTML = ''; 
+            resetModalLayout(); // PREVENT GLITCHES ON OPEN
 
             beep(300);
             
@@ -2109,7 +2121,10 @@
             }
         }
 
-        btnClose.onclick = () => modal.classList.add('hidden');
+        btnClose.onclick = () => {
+            modal.classList.add('hidden');
+            resetModalLayout(); // PREVENT GLITCHES ON CLOSE
+        };
         btnEdit.onclick = () => toggleEditMode(true);
         myProfileBtn.onclick = () => openProfile(currentUser.uid);
         
