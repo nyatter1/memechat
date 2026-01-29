@@ -159,31 +159,11 @@
             <aside class="w-56 bg-black flex flex-col z-20 border-l-4 border-white hidden md:flex">
                 <div class="p-3 border-b-4 border-white bg-gray-900">
                      <h2 class="font-pixel text-[10px] text-pink-400 mb-1">ONLINE_DEGENERATES</h2>
-                     <p class="text-[10px] text-gray-400">LOADING SOULS...</p>
+                     <p class="text-[10px] text-gray-400">DETECTING SOULS...</p>
                 </div>
                 
                 <div id="online-list" class="flex-1 overflow-y-auto p-3 space-y-3">
-                    <!-- Static fake list for vibe, real presence requires RTDB -->
-                    <div class="user-item flex items-center gap-2 cursor-pointer transition-transform">
-                        <div class="relative">
-                            <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="w-8 h-8 border-2 border-white bg-yellow-500 object-cover">
-                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 border border-black"></div>
-                        </div>
-                        <div>
-                            <p class="font-bold text-xs text-green-400">DogeFather</p>
-                            <p class="text-[9px] text-gray-500">Hodling...</p>
-                        </div>
-                    </div>
-                    <div class="user-item flex items-center gap-2 cursor-pointer transition-transform">
-                        <div class="relative">
-                            <img src="https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif" class="w-8 h-8 border-2 border-white bg-purple-500 object-cover">
-                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 border border-black animate-pulse"></div>
-                        </div>
-                        <div>
-                            <p class="font-bold text-xs text-purple-400">GlitchGawd</p>
-                            <p class="text-[9px] text-gray-500">Glitching out</p>
-                        </div>
-                    </div>
+                    <!-- Populated via JS -->
                 </div>
 
                 <div class="p-3 border-t-4 border-white bg-gray-900">
@@ -223,8 +203,11 @@
         const input = document.getElementById('msg-input');
         const sendBtn = document.getElementById('send-btn');
         const logoutBtn = document.getElementById('logout-btn');
+        const onlineList = document.getElementById('online-list');
 
         let currentUser = null;
+        // Default Avatar for Everyone
+        const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
 
         // --- AUTH CHECK ---
         onAuthStateChanged(auth, (user) => {
@@ -264,8 +247,10 @@
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("createdAt"), limit(50));
             
+            let isFirstLoad = true;
+
             onSnapshot(q, (snapshot) => {
-                feed.innerHTML = ''; // Clear feed to prevent dupes (simple implementation)
+                feed.innerHTML = ''; 
                 
                 // Add System Welcome
                  const sysDiv = document.createElement('div');
@@ -273,24 +258,26 @@
                  sysDiv.innerHTML = `<span class="bg-yellow-400 text-black px-3 py-1 font-pixel text-[10px] border-2 border-white inline-block transform -rotate-1">SYSTEM: WELCOME ${currentUser.displayName ? currentUser.displayName.toUpperCase() : 'ANON'}</span>`;
                  feed.appendChild(sysDiv);
 
+                 // Collect unique users for "Online" list (Simple Activity Tracking)
+                 const activeUsers = new Map();
+                 activeUsers.set(currentUser.uid, { name: currentUser.displayName || 'You', isSelf: true });
+
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const isSelf = data.uid === currentUser.uid;
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
                     
+                    if(data.uid && data.displayName) {
+                        if(!activeUsers.has(data.uid)) {
+                            activeUsers.set(data.uid, { name: data.displayName, isSelf: false });
+                        }
+                    }
+
                     const msgDiv = document.createElement('div');
                     msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
                     
-                    // Random-ish avatars based on UID char
-                    const avatars = [
-                        "https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif", 
-                        "https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif",
-                        "https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif"
-                    ];
-                    const avatarIndex = data.uid.charCodeAt(0) % avatars.length;
-                    
                     msgDiv.innerHTML = `
-                        <img src="${avatars[avatarIndex]}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover ${isSelf ? 'grayscale' : ''}">
+                        <img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover ${isSelf ? 'grayscale' : ''}">
                         <div class="flex flex-col ${isSelf ? 'items-end' : ''} max-w-[85%]">
                             <span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1">
                                 ${isSelf ? 'YOU' : (data.displayName || 'ANON')} 
@@ -303,9 +290,50 @@
                     `;
                     feed.appendChild(msgDiv);
                 });
+                
                 feed.scrollTop = feed.scrollHeight;
-                beep();
+                updateOnlineList(activeUsers);
+
+                // Sound Effect Logic: Only beep on updates (new messages), not first load
+                if (!isFirstLoad) {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            beep();
+                        }
+                    });
+                }
+                isFirstLoad = false;
             });
+        }
+
+        function updateOnlineList(usersMap) {
+            onlineList.innerHTML = '';
+            
+            // Render YOU first
+            const me = usersMap.get(currentUser.uid);
+            renderUserItem(me.name, true);
+            
+            usersMap.forEach((u, uid) => {
+                if (uid !== currentUser.uid) {
+                    renderUserItem(u.name, false);
+                }
+            });
+        }
+
+        function renderUserItem(name, isSelf) {
+            const div = document.createElement('div');
+            div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform";
+            div.innerHTML = `
+                <div class="relative">
+                    <img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-2 h-2 ${isSelf ? 'bg-green-500' : 'bg-purple-500'} border border-black animate-pulse"></div>
+                </div>
+                <div>
+                    <p class="font-bold text-xs ${isSelf ? 'text-green-400' : 'text-purple-400'}">${name} ${isSelf ? '(YOU)' : ''}</p>
+                    <p class="text-[9px] text-gray-500">Online</p>
+                </div>
+            `;
+            onlineList.appendChild(div);
         }
 
         async function sendMessage() {
