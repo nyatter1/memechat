@@ -570,6 +570,7 @@
         let selectedUserForContext = null;
         let activePMWindows = new Set();
         let inboxData = new Map(); // uid -> { count, pfp, name }
+        let pmHistory = new Map(); // uid -> [{msg data}, ...] for persistence
         
         // Image Upload State
         let pendingMainImage = null;
@@ -680,8 +681,7 @@
                     <button class="req-btn req-decline" onclick="window.handleFriendReq('${reqId}', '${uid}', false)">DECLINE</button>
                 </div>
             `;
-            // Add to notif list directly or via notification array
-            // Ideally we prepend to notification panel
+            // Prepend to notif list
             if(notifList.contains(emptyMsg)) notifList.innerHTML = '';
             notifList.prepend(div);
             
@@ -694,8 +694,7 @@
             const reqRef = doc(db, "friend_requests", reqId);
             if (accepted) {
                 // Update both users friends list
-                const batch = db.batch || null; // standard SDK uses batch, here we just do parallel writes
-                
+                const batch = db.batch || null; 
                 await updateDoc(doc(db, "users", currentUser.uid), {
                     friends: arrayUnion(senderUid)
                 });
@@ -708,9 +707,7 @@
                 await deleteDoc(reqRef);
                 addNotification("REQUEST DENIED", 'error');
             }
-            // Remove the notification element
-            // In a real app we'd track the DOM element, here we just refresh notifs list or let it be
-             renderNotifications(); // This might wipe the custom HTML, but simplifies state
+             renderNotifications(); 
         };
         
         // Context Menu Actions
@@ -745,7 +742,6 @@
             
             addNotification("USER BLOCKED", "error");
             contextMenu.style.display = 'none';
-            // Logic to close PMs handled by listener updates
         };
 
 
@@ -796,22 +792,32 @@
         // --- PM SYSTEM ---
         function initPMSystem() {
             // Listener for incoming messages
-            const qIncoming = query(collection(db, "private_messages"), where("receiverId", "==", currentUser.uid), limit(100));
+            // Using orderBy to get correct history sequence. Might fail if index is missing, added fallback.
+            const qIncoming = query(collection(db, "private_messages"), where("receiverId", "==", currentUser.uid), orderBy("createdAt", "asc"), limit(100));
             onSnapshot(qIncoming, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
-                        
-                        // Check if I blocked this sender
                         if (myBlocked.has(data.senderId)) return;
-                        
                         handleNewPM(data, true);
                     }
+                });
+            }, (error) => {
+                console.log("Fallback query due to missing index", error);
+                const qFallback = query(collection(db, "private_messages"), where("receiverId", "==", currentUser.uid), limit(100));
+                onSnapshot(qFallback, (snapshot) => {
+                     snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const data = change.doc.data();
+                            if (myBlocked.has(data.senderId)) return;
+                            handleNewPM(data, true);
+                        }
+                     });
                 });
             });
 
             // Listener for outgoing messages
-            const qOutgoing = query(collection(db, "private_messages"), where("senderId", "==", currentUser.uid), limit(100));
+            const qOutgoing = query(collection(db, "private_messages"), where("senderId", "==", currentUser.uid), orderBy("createdAt", "asc"), limit(100));
             onSnapshot(qOutgoing, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                      if (change.type === "added") {
@@ -819,12 +825,35 @@
                         handleNewPM(data, false);
                      }
                 });
+            }, (error) => {
+                 const qFallback = query(collection(db, "private_messages"), where("senderId", "==", currentUser.uid), limit(100));
+                 onSnapshot(qFallback, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const data = change.doc.data();
+                            handleNewPM(data, false);
+                        }
+                    });
+                 });
             });
         }
         
         function handleNewPM(msg, isIncoming) {
             const partnerId = isIncoming ? msg.senderId : msg.receiverId;
             
+            // Persist in Memory
+            if (!pmHistory.has(partnerId)) {
+                pmHistory.set(partnerId, []);
+            }
+            const hist = pmHistory.get(partnerId);
+            const msgTime = msg.createdAt ? msg.createdAt.toMillis() : Date.now();
+            msg._sortTime = msgTime; 
+            
+            // Check for dupes just in case (optional but safe)
+            // Ideally we'd use message ID but for this structure we just push.
+            hist.push(msg);
+            hist.sort((a, b) => a._sortTime - b._sortTime);
+
             // 1. Update Inbox
             if (isIncoming) {
                 let prev = inboxData.get(partnerId) || { count: 0, name: msg.senderName, pfp: msg.pfpURL };
@@ -838,7 +867,7 @@
                 renderInbox();
             }
 
-            // 2. Update Window
+            // 2. Update Window if exists
             const windowId = `pm-window-${partnerId}`;
             const existingWin = document.getElementById(windowId);
             if (existingWin) {
@@ -1001,7 +1030,6 @@
                 ${bannerHTML}
                 <div class="pm-messages">
                     <!-- Chat loaded here -->
-                    <div class="text-gray-500 text-[8px] text-center mt-2">SECURE CHANNEL OPENED</div>
                 </div>
                 <!-- PREVIEW -->
                 <div class="pm-preview hidden h-8 bg-gray-800 border-t border-white flex items-center px-2">
@@ -1018,6 +1046,20 @@
             pmContainer.appendChild(win);
             makeDraggable(win, win.querySelector('.pm-header'));
             
+            // Populate History
+            const content = win.querySelector('.pm-messages');
+            const hist = pmHistory.get(uid) || [];
+            
+            if (hist.length === 0) {
+                 content.innerHTML = '<div class="text-gray-500 text-[8px] text-center mt-2">SECURE CHANNEL OPENED</div>';
+            } else {
+                 hist.forEach(msg => {
+                   const isMsgIncoming = (msg.senderId === uid); 
+                   renderPMBubble(content, msg, isMsgIncoming);
+                });
+                setTimeout(() => content.scrollTop = content.scrollHeight, 10);
+            }
+
             // Setup Send Logic
             const input = win.querySelector('input');
             const btn = win.querySelector('button:last-child');
@@ -1152,19 +1194,8 @@
         }
 
         function renderNotifications() {
-            // Keep specific Friend Req notifications if they exist in DOM, or re-render everything
-            // To be safe and simple, we clear list. 
-            // NOTE: This clears the HTML Friend Request buttons if mixed with standard notifications array.
-            // A better way for this chaos app: Only render from array. 
-            // Friend requests are handled by separate listener which injects directly.
-            
-            // To prevent clearing friend requests, we target non-request items or just append.
-            // Simplified: Clear all, re-render standard array. Friend requests will reappear on next snapshot/refresh or we can store them.
-            // For now, let's just render the standard array and let friend request listener prepend.
-            
-            // If friend reqs are transient in DOM, we lose them on array render. 
-            // So we shouldn't wipe InnerHTML if we want to keep them.
-            // We'll clear only elements with class 'notif-item'.
+            // Clear standard notifications to re-render, but allow friend requests to be re-injected by listener or preserved manually.
+            // Simplified: Re-render array. Friend reqs will be handled by their listener.
             
             const items = notifList.querySelectorAll('.notif-item');
             items.forEach(el => el.remove());
