@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEME CHAT 9000 // DARK VOID EDITION</title>
+    <title>MEME CHAT 9000 // THE VOID</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Press+Start+2P&family=Rubik+Glitch&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <style>
-        /* CHAOS STYLES */
+        /* SHARED CHAOS STYLES */
         body {
             font-family: 'Comic Neue', 'Comic Sans MS', sans-serif;
-            overflow-x: hidden;
-            /* White cursor for dark mode */
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white"><text y="20" font-size="20">🖕</text></svg>'), auto;
+            overflow: hidden; /* Main chat shouldn't scroll body */
+            cursor: auto;
         }
 
         .font-pixel { font-family: 'Press Start 2P', cursive; }
@@ -25,201 +24,270 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Dark Mode Chaos Gradient */
         .bg-chaos {
             background: linear-gradient(-45deg, #000000, #1a0b2e, #0f0f29, #001a1a, #26001b, #1a0000, #000000);
             background-size: 400% 400%;
-            animation: rainbow-bg 15s ease infinite;
+            animation: rainbow-bg 20s ease infinite;
         }
 
-        .floating-emoji {
-            position: absolute;
-            pointer-events: none;
-            animation: floatUp 3s linear forwards;
-            font-size: 2rem;
-            z-index: 0;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .shake-constant {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
-        }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        .glitch-text {
-            position: relative;
-        }
-
+        /* Glitch Text */
+        .glitch-text { position: relative; }
         .glitch-text::before, .glitch-text::after {
             content: attr(data-text);
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #111; /* Dark background for glitch mask */
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a;
         }
-
         .glitch-text::before {
-            left: 2px;
-            text-shadow: -1px 0 #ff00c1;
+            left: 2px; text-shadow: -1px 0 #ff00c1;
             clip: rect(44px, 450px, 56px, 0);
             animation: glitch-anim 5s infinite linear alternate-reverse;
         }
-
         .glitch-text::after {
-            left: -2px;
-            text-shadow: -1px 0 #00fff9;
+            left: -2px; text-shadow: -1px 0 #00fff9;
             clip: rect(44px, 450px, 56px, 0);
             animation: glitch-anim2 5s infinite linear alternate-reverse;
         }
-
         @keyframes glitch-anim {
             0% { clip: rect(10px, 9999px, 30px, 0); }
             20% { clip: rect(80px, 9999px, 100px, 0); }
-            40% { clip: rect(40px, 9999px, 60px, 0); }
-            60% { clip: rect(10px, 9999px, 80px, 0); }
-            80% { clip: rect(60px, 9999px, 10px, 0); }
             100% { clip: rect(90px, 9999px, 50px, 0); }
         }
-
         @keyframes glitch-anim2 {
             0% { clip: rect(60px, 9999px, 10px, 0); }
-            20% { clip: rect(20px, 9999px, 60px, 0); }
-            40% { clip: rect(80px, 9999px, 10px, 0); }
-            60% { clip: rect(10px, 9999px, 90px, 0); }
-            80% { clip: rect(30px, 9999px, 50px, 0); }
             100% { clip: rect(70px, 9999px, 100px, 0); }
         }
 
-        .brutal-shadow {
-            /* White shadow for dark mode contrast */
-            box-shadow: 10px 10px 0px 0px #ffffff;
+        /* Specific Chat Styles */
+        .message-bubble {
+            border: 2px solid white;
+            box-shadow: 4px 4px 0px #ff00ff;
+            transition: transform 0.1s;
+        }
+        .message-bubble:hover {
+            transform: scale(1.02);
+            box-shadow: 2px 2px 0px #00ffff;
+        }
+        .message-self {
+            border-color: #ffff00;
+            box-shadow: 4px 4px 0px #ffffff;
+            align-self: flex-end;
+            background: #222;
+        }
+
+        .brutal-btn {
+            border: 2px solid white;
+            box-shadow: 3px 3px 0px #000;
+            background: #ff00ff;
+            color: white;
+            font-family: 'Press Start 2P';
             transition: all 0.1s;
         }
-        .brutal-shadow:active {
-            box-shadow: 2px 2px 0px 0px #ffffff;
-            transform: translate(8px, 8px);
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
         }
 
-        /* TILT EFFECT */
-        .tilt-card {
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
+        .brutal-shadow {
+            box-shadow: 8px 8px 0px 0px #ffffff;
         }
         
-        /* Marquee */
-        .marquee-container {
-            position: fixed;
-            bottom: 0;
-            background: #3b0764; /* Dark Purple */
-            color: #ffffff;
-            font-family: 'Press Start 2P';
-            padding: 10px 0;
-            border-top: 4px solid #ffffff;
-            z-index: 50;
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; border-left: 2px solid white; }
+        ::-webkit-scrollbar-thumb { background: #ff00c8; border: 2px solid white; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffffff; }
+
+        .floating-img {
+            position: absolute;
+            z-index: 0;
+            opacity: 0.1;
+            pointer-events: none;
         }
         
+        .user-item:hover {
+            background-color: #333;
+            transform: translateX(-5px);
+        }
+
+        /* MODAL ANIMATION */
+        #profile-modal:not(.hidden) {
+            animation: modal-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modal-pop {
+            0% { opacity: 0; transform: scale(0.9) translate(-50%, -50%); }
+            100% { opacity: 1; transform: scale(1) translate(-50%, -50%); }
+        }
+        
+        .edit-overlay {
+            transition: opacity 0.2s;
+        }
+
+        /* NOTIFICATION STYLES */
+        .notif-item {
+            animation: slideIn 0.2s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
-<body class="bg-chaos min-h-screen flex flex-col items-center justify-center overflow-hidden select-none text-white">
+<body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
 
-    <!-- FLOATING BACKGROUND MEMES -->
-    <div id="emoji-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
-
-    <!-- CONTENT WRAPPER (ZOOMED OUT EFFECT 80%) -->
-    <div class="relative z-20 flex flex-col items-center gap-2 transform scale-[0.8]">
-        <!-- HEADER -->
-        <h1 class="font-glitch text-4xl md:text-6xl text-white mb-4 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10" data-text="MEME CHAT">
-            MEME<br/><span class="text-purple-400">CHAT</span>
-        </h1>
-
-        <!-- MAIN CARD -->
-        <div class="tilt-card relative w-full max-w-md p-2 z-20">
+    <!-- CONTENT WRAPPER (FULL SCREEN, NO SCALE) -->
+    <div class="relative z-20 w-full h-full flex items-center justify-center p-2 md:p-4">
+        
+        <!-- CHAT WINDOW (Almost Full Screen) -->
+        <div class="w-full h-full bg-gray-900 border-4 border-white flex brutal-shadow relative z-10 overflow-hidden">
             
-            <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
+            <!-- MAIN CHAT AREA (Left Side) -->
+            <main class="flex-1 flex flex-col relative border-r-4 border-white bg-black/20">
                 
-                <!-- TOGGLE SWITCH -->
-                <div class="flex border-4 border-white mb-6 bg-gray-800">
-                    <button id="btn-login" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-yellow-400 text-black hover:bg-yellow-300 transition-colors border-r-4 border-white">
-                        LOG IN
-                    </button>
-                    <button id="btn-signup" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors">
-                        SIGN UP
-                    </button>
+                <!-- TOP BAR -->
+                <header class="h-12 border-b-4 border-white bg-black flex items-center justify-between px-4 shadow-xl z-30">
+                    <div class="flex items-center gap-3">
+                        <button class="md:hidden text-lg">🍔</button>
+                        <h1 class="font-glitch text-xl md:text-2xl" data-text="#GENERAL_CHAOS">#GENERAL_CHAOS</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                         <div class="font-pixel text-[10px] text-yellow-300 animate-pulse hidden md:block">
+                            CHAOS: 9000%
+                        </div>
+                        
+                        <!-- NOTIFICATION BELL -->
+                        <div class="relative cursor-pointer group" id="notif-btn">
+                            <span class="text-2xl group-hover:scale-110 transition-transform block">🔔</span>
+                            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-pixel w-4 h-4 flex items-center justify-center border border-white hidden animate-bounce">0</span>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- NOTIFICATION PANEL (Dropdown) -->
+                <div id="notif-panel" class="absolute top-12 right-2 w-72 bg-gray-900 border-4 border-white brutal-shadow z-50 hidden flex flex-col max-h-[50vh] shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                    <div class="bg-black p-2 border-b-4 border-white flex justify-between items-center sticky top-0 z-10">
+                        <span class="font-pixel text-[10px] text-white">SYSTEM_LOGS</span>
+                        <button id="clear-notifs" class="text-[8px] bg-red-600 text-white px-2 py-1 hover:bg-red-500 font-pixel border border-white active:translate-y-1">NUKE ALL</button>
+                    </div>
+                    <div id="notif-list" class="overflow-y-auto p-2 space-y-2 flex-1">
+                        <!-- Items Injected Here -->
+                        <div class="text-center text-gray-500 font-pixel text-[8px] py-4" id="empty-msg">NO NEW DATA</div>
+                    </div>
                 </div>
 
-                <!-- LOGIN FORM -->
-                <form id="form-login" class="flex flex-col gap-4 block">
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_OR_WHATEVER</label>
-                        <input id="login-email" type="email" placeholder="xX_DarkLord_Xx@meme.com" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-pink-900 focus:ring-4 focus:ring-pink-500 transition-all transform focus:-rotate-1">
+                <!-- MESSAGES FEED -->
+                <div id="message-feed" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth pb-20">
+                    <!-- Messages will be injected here by Firebase -->
+                    <div class="text-center my-2">
+                        <span class="bg-yellow-400 text-black px-3 py-1 font-pixel text-[10px] border-2 border-white inline-block transform -rotate-1">
+                            SYSTEM: CONNECTING TO HIVE MIND...
+                        </span>
                     </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">SECRET_PASSWORD</label>
-                        <input id="login-password" type="password" placeholder="********" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-blue-900 focus:ring-4 focus:ring-blue-500 transition-all transform focus:rotate-1">
-                    </div>
-                    <button type="submit" class="mt-4 bg-white text-black font-pixel py-4 border-4 border-transparent hover:border-pink-500 hover:text-pink-500 hover:bg-black transition-all text-sm brutal-shadow">
-                        ENTER THE VOID
-                    </button>
-                    <p class="text-center text-xs mt-2 cursor-pointer text-gray-400 hover:text-red-500 hover:underline" onclick="alert('SKILL ISSUE TBH')">Forgot Password?</p>
-                </form>
+                </div>
 
-                <!-- SIGNUP FORM -->
-                <form id="form-signup" class="flex flex-col gap-4 hidden">
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">CHOOSE_NAME</label>
-                        <input id="signup-name" type="text" placeholder="CryptoWojak" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-green-900 focus:ring-4 focus:ring-green-500 transition-all">
-                    </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_ADDRESS</label>
-                        <input id="signup-email" type="email" placeholder="anon@shadow.net" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-yellow-900 focus:ring-4 focus:ring-yellow-500 transition-all">
-                    </div>
-                    <div class="group">
-                        <label class="font-pixel text-xs mb-2 block text-gray-300">SUPER_SECURE_PW</label>
-                        <input id="signup-password" type="password" placeholder="password123 (dont)" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-purple-900 focus:ring-4 focus:ring-purple-500 transition-all">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="soul-contract" class="w-6 h-6 border-4 border-white accent-pink-500 bg-gray-800">
-                        <label for="soul-contract" class="text-xs font-bold leading-tight text-gray-300">I agree to sell my soul to the void.</label>
-                    </div>
-                    <button type="submit" class="mt-4 bg-red-800 text-white font-pixel py-4 border-4 border-transparent hover:border-white hover:text-white hover:bg-red-600 transition-all text-sm brutal-shadow animate-pulse">
-                        SACRIFICE & JOIN
+                <!-- INPUT AREA -->
+                <div class="h-16 bg-black border-t-4 border-white p-2 flex items-center gap-3 z-30 relative">
+                    <button class="h-10 w-10 border-2 border-white bg-gray-800 text-lg hover:bg-gray-700 active:scale-95 shadow-[2px_2px_0_#fff]">
+                        📎
                     </button>
-                </form>
+                    <input id="msg-input" type="text" placeholder="SCREAM INTO THE VOID..." class="flex-1 h-10 bg-gray-900 border-2 border-white px-3 text-white text-sm font-bold focus:outline-none focus:bg-gray-800 focus:shadow-[inset_0_0_10px_#ff00ff] transition-all">
+                    <button id="send-btn" class="brutal-btn h-10 px-4 text-xs font-bold hover:bg-pink-500 active:bg-pink-700">
+                        SCREAM
+                    </button>
+                </div>
+            </main>
 
-            </div>
+            <!-- RIGHT SIDEBAR (Online Players) -->
+            <aside class="w-56 bg-black flex flex-col z-20 border-l-4 border-white hidden md:flex">
+                <div class="p-3 border-b-4 border-white bg-gray-900">
+                     <h2 class="font-pixel text-[10px] text-pink-400 mb-1">ONLINE_DEGENERATES</h2>
+                     <p class="text-[10px] text-gray-400">DETECTING SOULS...</p>
+                </div>
+                
+                <div id="online-list" class="flex-1 overflow-y-auto p-3 space-y-3">
+                    <!-- Populated via JS -->
+                </div>
+
+                <div class="p-3 border-t-4 border-white bg-gray-900 flex flex-col gap-2">
+                    <button id="my-profile-btn" class="w-full border-2 border-white p-2 font-pixel text-[10px] bg-blue-600 hover:bg-blue-500 text-white shadow-[2px_2px_0_white] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                        MY_PROFILE
+                    </button>
+                    <button id="logout-btn" class="w-full border-2 border-white p-2 font-pixel text-[10px] bg-red-600 hover:bg-red-500 text-white shadow-[2px_2px_0_white] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                        RAGE_QUIT
+                    </button>
+                </div>
+            </aside>
+
         </div>
     </div>
 
-    <!-- MARQUEE FOOTER -->
-    <div class="marquee-container transform scale-[0.8] origin-bottom w-[125%] left-[-12.5%]">
-        <marquee scrollamount="12" scrolldelay="100">
-            WARNING: DARK MODE ACTIVATED /// PROTECT YOUR EYES /// THE VOID STARES BACK /// NO REFUNDS ON SOULS /// CHAOS REIGNS ETERNAL
-        </marquee>
-    </div>
+    <!-- BACKGROUND FLOATING IMAGES (Decor) -->
+    <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="floating-img top-10 right-10 w-24" style="animation: spin 10s linear infinite;">
+    <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="floating-img bottom-40 left-10 w-32 filter grayscale contrast-200">
 
-    <!-- AUDIO TOGGLE -->
-    <div class="fixed bottom-20 right-4 z-50 transform scale-[0.8] origin-bottom-right">
-        <button onclick="toggleChaos()" class="bg-gray-900 text-white border-4 border-white p-2 rounded-full shadow-lg hover:rotate-12 transition-transform">
-            🤡 CHAOS MODE
-        </button>
-    </div>
+    <!-- PROFILE MODAL (Hidden by default) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-black/80 backdrop-blur-sm pointer-events-auto">
+        <div class="bg-gray-900 border-4 border-white w-full max-w-md p-0 brutal-shadow relative mx-4">
+           <!-- Banner -->
+           <div class="h-32 bg-purple-900 relative overflow-hidden group">
+               <img id="modal-banner" class="w-full h-full object-cover opacity-80" src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif">
+               <div id="banner-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[10px]">
+                   <span>UPLOAD BANNER (Max 2MB)</span>
+                   <input type="file" id="upload-banner" class="hidden" accept="image/*">
+               </div>
+           </div>
+           
+           <!-- PFP -->
+           <div class="absolute top-20 left-4 w-24 h-24 border-4 border-white bg-black z-10 group">
+               <img id="modal-pfp" class="w-full h-full object-cover" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme">
+               <div id="pfp-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[8px]">
+                   <span>UPLOAD PFP (Max 1MB)</span>
+                   <input type="file" id="upload-pfp" class="hidden" accept="image/*">
+               </div>
+           </div>
+           
+           <!-- Content -->
+           <div class="mt-14 p-4">
+               <h2 id="modal-name" class="font-glitch text-2xl mb-1 truncate text-white" data-text="LOADING...">LOADING...</h2>
+               
+               <!-- Read Mode Info -->
+               <div id="read-mode-info">
+                    <div class="flex gap-2 text-[10px] font-pixel text-gray-400 mb-4">
+                        <span id="modal-age">LVL: ??</span> | <span id="modal-gender">CLASS: UNKNOWN</span>
+                    </div>
+                    <p id="modal-bio" class="text-sm font-bold text-pink-400 mb-4 border-l-4 border-pink-500 pl-2 min-h-[3rem] whitespace-pre-wrap">Loading bio...</p>
+               </div>
+  
+               <!-- Edit Mode Inputs (Hidden) -->
+               <div id="edit-form" class="hidden space-y-2 mb-4">
+                  <div class="flex gap-2">
+                    <input id="input-age" placeholder="AGE/LVL" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                    <input id="input-gender" placeholder="GENDER/CLASS" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                  </div>
+                  <textarea id="input-bio" placeholder="WRITE YOUR LORE..." class="bg-black border border-white p-2 text-white text-xs w-full h-20 font-bold focus:outline-none focus:bg-gray-800 resize-none"></textarea>
+               </div>
+  
+               <!-- Stats & Actions -->
+               <div class="flex justify-between items-center border-t-2 border-gray-700 pt-4">
+                   <div class="flex items-center gap-2 group cursor-pointer" id="like-container">
+                       <button id="btn-like" class="text-2xl transition-transform group-hover:scale-125 group-active:scale-90 grayscale">🔥</button>
+                       <span id="modal-likes" class="font-pixel text-yellow-400 text-xs">0 SOULS</span>
+                   </div>
+                   <div class="flex gap-2">
+                       <button id="btn-edit" class="brutal-btn px-3 py-2 text-[10px] hidden hover:bg-pink-400">EDIT_DATA</button>
+                       <button id="btn-save" class="brutal-btn px-3 py-2 text-[10px] bg-green-600 hidden hover:bg-green-500">SAVE_GAME</button>
+                       <button id="btn-close" class="border-2 border-white px-3 py-2 text-[10px] hover:bg-white hover:text-black font-pixel transition-colors text-white bg-black">CLOSE</button>
+                   </div>
+               </div>
+           </div>
+        </div>
+      </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -233,148 +301,541 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        const feed = document.getElementById('message-feed');
+        const input = document.getElementById('msg-input');
+        const sendBtn = document.getElementById('send-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const onlineList = document.getElementById('online-list');
+        const myProfileBtn = document.getElementById('my-profile-btn');
 
-        // Check if already logged in
+        // Modal Elements
+        const modal = document.getElementById('profile-modal');
+        const modalName = document.getElementById('modal-name');
+        const modalBio = document.getElementById('modal-bio');
+        const modalAge = document.getElementById('modal-age');
+        const modalGender = document.getElementById('modal-gender');
+        const modalPfp = document.getElementById('modal-pfp');
+        const modalBanner = document.getElementById('modal-banner');
+        const modalLikes = document.getElementById('modal-likes');
+        
+        const btnEdit = document.getElementById('btn-edit');
+        const btnSave = document.getElementById('btn-save');
+        const btnClose = document.getElementById('btn-close');
+        const btnLike = document.getElementById('btn-like');
+        
+        const readModeInfo = document.getElementById('read-mode-info');
+        const editForm = document.getElementById('edit-form');
+        const inputBio = document.getElementById('input-bio');
+        const inputAge = document.getElementById('input-age');
+        const inputGender = document.getElementById('input-gender');
+        
+        const bannerOverlay = document.getElementById('banner-overlay');
+        const pfpOverlay = document.getElementById('pfp-overlay');
+        const uploadBanner = document.getElementById('upload-banner');
+        const uploadPfp = document.getElementById('upload-pfp');
+        
+        // Notification Elements
+        const notifBtn = document.getElementById('notif-btn');
+        const notifPanel = document.getElementById('notif-panel');
+        const notifList = document.getElementById('notif-list');
+        const notifBadge = document.getElementById('notif-badge');
+        const clearNotifsBtn = document.getElementById('clear-notifs');
+        const emptyMsg = document.getElementById('empty-msg');
+
+        let currentUser = null;
+        let currentProfileUid = null;
+        let activeUsersMap = new Map(); // Store display names and avatars
+        let currentUserPfp = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme"; // Track local user PFP
+
+        let notifications = [];
+        let unreadCount = 0;
+
+        // Default Assets
+        const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
+        const DEFAULT_BANNER = "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif";
+
+        // --- AUTH CHECK ---
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = "/chat";
-            }
-        });
-
-        // --- DOM ELEMENTS ---
-        const btnLogin = document.getElementById('btn-login');
-        const btnSignup = document.getElementById('btn-signup');
-        const formLogin = document.getElementById('form-login');
-        const formSignup = document.getElementById('form-signup');
-        const body = document.body;
-        const container = document.querySelector('.form-container');
-
-        // --- TOGGLE LOGIC (No Sound) ---
-        window.switchTab = function(isLogin) {
-            if (isLogin) {
-                formLogin.classList.remove('hidden');
-                formLogin.classList.add('flex');
-                formSignup.classList.add('hidden');
-                formSignup.classList.remove('flex');
-                btnLogin.classList.add('bg-yellow-400', 'text-black', 'border-r-4');
-                btnLogin.classList.remove('bg-gray-700', 'text-gray-400');
-                btnSignup.classList.add('bg-gray-700', 'text-gray-400');
-                btnSignup.classList.remove('bg-yellow-400', 'text-black');
+            if (!user) {
+                window.location.href = "/index";
             } else {
-                formLogin.classList.add('hidden');
-                formLogin.classList.remove('flex');
-                formSignup.classList.remove('hidden');
-                formSignup.classList.add('flex');
-                btnSignup.classList.add('bg-yellow-400', 'text-black');
-                btnSignup.classList.remove('bg-gray-700', 'text-gray-400');
-                btnLogin.classList.add('bg-gray-700', 'text-gray-400', 'border-r-4');
-                btnLogin.classList.remove('bg-yellow-400', 'text-black');
+                currentUser = user;
+                initChat();
+                listenToMyProfile();
             }
-            const rot = Math.random() * 10 - 5;
-            container.style.transform = `rotate(${rot}deg) scale(1.02)`;
-            setTimeout(() => { container.style.transform = `rotate(0deg) scale(1)`; }, 200);
-        }
-
-        btnLogin.addEventListener('click', () => switchTab(true));
-        btnSignup.addEventListener('click', () => switchTab(false));
-
-        // --- EMOJI RAIN ---
-        const emojis = ['🌑', '🕸️', '🔮', '💀', '🦇', '👾', '👁️', '⚡', '💊', '🛸', '🥀'];
-        function spawnEmoji() {
-            const el = document.createElement('div');
-            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            el.className = 'floating-emoji';
-            el.style.left = Math.random() * 100 + 'vw';
-            el.style.bottom = '-50px';
-            el.style.fontSize = (Math.random() * 2 + 1) + 'rem';
-            document.getElementById('emoji-container').appendChild(el);
-            setTimeout(() => { el.remove(); }, 3000);
-        }
-        setInterval(spawnEmoji, 800);
-
-        // --- INPUT CHAOS ---
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('input', () => {
-                spawnEmoji();
-                if (Math.random() > 0.8) {
-                    const colors = ['#ffffff', '#ff00ff', '#00ffff', '#ffff00', '#00ff00'];
-                    container.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-                }
-            });
         });
 
-        // --- LOGIN HANDLER ---
-        formLogin.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const btn = e.target.querySelector('button[type="submit"]');
+        // --- LOGOUT ---
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "/index");
+        });
+
+        // --- SOUNDS ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ac = new AudioContext();
+        function beep(freq = 150) {
+            if(ac.state === 'suspended') ac.resume();
+            const osc = ac.createOscillator();
+            const g = ac.createGain();
+            osc.connect(g);
+            g.connect(ac.destination);
+            osc.type='sawtooth';
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.1);
+            osc.start();
+            osc.stop(ac.currentTime + 0.1);
+        }
+
+        // --- NOTIFICATION CENTER LOGIC ---
+        function addNotification(message, type = 'info') {
+            const notif = {
+                id: Date.now(),
+                message,
+                type,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            notifications.unshift(notif); // Add to top
+            unreadCount++;
+            updateBadge();
+            renderNotifications(); // Render even if hidden so it's ready
+            beep(type === 'error' ? 80 : 800);
+        }
+
+        function updateBadge() {
+            if (unreadCount > 0) {
+                notifBadge.classList.remove('hidden');
+                notifBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                notifBadge.classList.add('hidden');
+            }
+        }
+
+        function renderNotifications() {
+            // Keep header, clear list
+            notifList.innerHTML = '';
             
-            try {
-                btn.innerText = "AUTHENTICATING...";
-                await signInWithEmailAndPassword(auth, email, password);
-                body.style.animation = "shake 0.5s infinite";
-                window.location.href = "/chat";
-            } catch (error) {
-                btn.innerText = "ENTER THE VOID";
-                alert("ACCESS DENIED: " + error.message);
-            }
-        });
-
-        // --- SIGNUP HANDLER ---
-        formSignup.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const soul = document.getElementById('soul-contract').checked;
-            const btn = e.target.querySelector('button[type="submit"]');
-
-            if (!soul) {
-                alert("YOU MUST SELL YOUR SOUL TO PROCEED");
+            if (notifications.length === 0) {
+                notifList.appendChild(emptyMsg);
                 return;
             }
 
-            try {
-                btn.innerText = "SACRIFICING...";
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(userCredential.user, { displayName: name });
-                body.style.animation = "shake 0.5s infinite";
-                window.location.href = "/chat";
-            } catch (error) {
-                btn.innerText = "SACRIFICE & JOIN";
-                alert("RITUAL FAILED: " + error.message);
+            notifications.forEach((n) => {
+                const item = document.createElement('div');
+                item.className = `notif-item p-2 border border-white mb-2 flex justify-between items-start gap-2 ${n.type === 'error' ? 'bg-red-900/50' : (n.type === 'success' ? 'bg-green-900/50' : 'bg-gray-800')}`;
+                
+                let icon = 'ℹ️';
+                if(n.type === 'error') icon = '💀';
+                if(n.type === 'success') icon = '💾';
+
+                item.innerHTML = `
+                    <div class="flex gap-2">
+                        <span class="text-lg">${icon}</span>
+                        <div>
+                             <p class="text-[10px] font-bold text-white leading-tight">${n.message}</p>
+                             <p class="text-[8px] text-gray-400 font-pixel mt-1">${n.timestamp}</p>
+                        </div>
+                    </div>
+                    <button class="text-white hover:text-red-400 font-bold" onclick="window.deleteNotif(${n.id})">X</button>
+                `;
+                notifList.appendChild(item);
+            });
+        }
+
+        // Toggle Panel
+        notifBtn.addEventListener('click', () => {
+            const isHidden = notifPanel.classList.contains('hidden');
+            if (isHidden) {
+                notifPanel.classList.remove('hidden');
+                unreadCount = 0; // Clear unread on open
+                updateBadge();
+            } else {
+                notifPanel.classList.add('hidden');
             }
         });
 
-        // --- CHAOS MODE ---
-        let chaosInterval;
-        window.toggleChaos = function() {
-            const btn = document.querySelector('button[onclick="toggleChaos()"]');
-            if (chaosInterval) {
-                clearInterval(chaosInterval);
-                chaosInterval = null;
-                document.body.style.filter = "none";
-                btn.innerText = "🤡 CHAOS MODE";
-            } else {
-                btn.innerText = "🛑 STOP THE PAIN";
-                chaosInterval = setInterval(() => {
-                    const hue = Math.random() * 360;
-                    document.body.style.filter = `hue-rotate(${hue}deg) contrast(1.5) invert(0.1)`;
-                    const x = Math.random() * 10 - 5;
-                    const y = Math.random() * 10 - 5;
-                    document.body.style.transform = `translate(${x}px, ${y}px)`;
-                }, 100);
+        // Global handlers for HTML inline calls
+        window.deleteNotif = (id) => {
+            notifications = notifications.filter(n => n.id !== id);
+            renderNotifications();
+        };
+
+        clearNotifsBtn.addEventListener('click', () => {
+            notifications = [];
+            renderNotifications();
+        });
+
+        // --- LISTEN FOR MY PFP CHANGES ---
+        function listenToMyProfile() {
+            onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.pfpURL) {
+                        currentUserPfp = data.pfpURL;
+                        updateOnlineList(); // Update sidebar immediately
+                    }
+                }
+            });
+        }
+
+        // --- CHAT LOGIC ---
+        function initChat() {
+            const q = query(collection(db, "messages"), orderBy("createdAt"), limit(50));
+            let isFirstLoad = true;
+
+            onSnapshot(q, async (snapshot) => {
+                feed.innerHTML = ''; 
+                
+                 const sysDiv = document.createElement('div');
+                 sysDiv.className = "text-center my-2";
+                 sysDiv.innerHTML = `<span class="bg-yellow-400 text-black px-3 py-1 font-pixel text-[10px] border-2 border-white inline-block transform -rotate-1">SYSTEM: WELCOME ${currentUser.displayName ? currentUser.displayName.toUpperCase() : 'ANON'}</span>`;
+                 feed.appendChild(sysDiv);
+
+                 activeUsersMap.clear();
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    const isSelf = data.uid === currentUser.uid;
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
+                    
+                    // Populate online list map from message data
+                    if(data.uid && data.displayName) {
+                        // If user not in map OR we found a message with a PFP and the map entry has none, update it
+                        if (!activeUsersMap.has(data.uid) || (data.pfpURL && !activeUsersMap.get(data.uid).pfp)) {
+                            activeUsersMap.set(data.uid, { name: data.displayName, pfp: data.pfpURL });
+                        }
+                    }
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
+                    
+                    // PFP: Use data.pfpURL from message if available, else default
+                    const pfpSrc = data.pfpURL || DEFAULT_AVATAR;
+                    
+                    // Add click handler to avatar
+                    const avatarHTML = `<img src="${pfpSrc}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
+
+                    msgDiv.innerHTML = `
+                        ${avatarHTML}
+                        <div class="flex flex-col ${isSelf ? 'items-end' : ''} max-w-[85%]">
+                            <span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1">
+                                ${isSelf ? 'YOU' : (data.displayName || 'ANON')} 
+                                <span class="text-gray-500 text-[10px]">@ ${date}</span>
+                            </span>
+                            <div class="message-bubble ${isSelf ? 'message-self bg-black shadow-[4px_4px_0_white]' : 'bg-black'} p-2 text-sm relative">
+                                ${escapeHtml(data.text)}
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(msgDiv);
+                }
+                
+                feed.scrollTop = feed.scrollHeight;
+                updateOnlineList();
+
+                if (!isFirstLoad) {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") beep();
+                    });
+                }
+                isFirstLoad = false;
+            });
+        }
+
+        function updateOnlineList() {
+            onlineList.innerHTML = '';
+            // Render YOU first with LIVE PFP (local state)
+            renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
+            
+            // Render others from the map built from messages
+            activeUsersMap.forEach((u, uid) => {
+                if (uid !== currentUser.uid) {
+                    renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
+                }
+            });
+        }
+
+        function renderUserItem(uid, name, isSelf, pfpUrl) {
+            const div = document.createElement('div');
+            div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform";
+            div.onclick = () => openProfile(uid);
+            div.innerHTML = `
+                <div class="relative">
+                    <img src="${pfpUrl}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-2 h-2 ${isSelf ? 'bg-green-500' : 'bg-purple-500'} border border-black animate-pulse"></div>
+                </div>
+                <div>
+                    <p class="font-bold text-xs ${isSelf ? 'text-green-400' : 'text-purple-400'}">${name} ${isSelf ? '(YOU)' : ''}</p>
+                    <p class="text-[9px] text-gray-500">Online</p>
+                </div>
+            `;
+            onlineList.appendChild(div);
+        }
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text || !currentUser) return;
+            
+            input.value = '';
+            try {
+                await addDoc(collection(db, "messages"), {
+                    text: text,
+                    uid: currentUser.uid,
+                    displayName: currentUser.displayName || 'Anon',
+                    createdAt: serverTimestamp(),
+                    pfpURL: currentUserPfp // Bake PFP into message for history consistency
+                });
+            } catch (e) {
+                console.error("Error sending message: ", e);
+                addNotification("MESSAGE LOST IN VOID", "error");
             }
         }
 
-        // --- MOUSE TRACKING ---
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth - e.pageX) / 50;
-            const y = (window.innerHeight - e.pageY) / 50;
-            container.style.boxShadow = `${x}px ${y}px 0px 0px #ffffff`;
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
         });
+        
+        sendBtn.addEventListener('click', sendMessage);
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- PROFILE LOGIC ---
+        
+        // Expose to window for inline onclicks
+        window.openProfile = openProfile;
+
+        async function openProfile(uid) {
+            currentProfileUid = uid;
+            modal.classList.remove('hidden');
+            beep(300);
+
+            // Reset UI
+            modalName.innerText = "LOADING...";
+            modalBio.innerText = "...";
+            modalAge.innerText = "LVL: ??";
+            modalGender.innerText = "CLASS: ???";
+            modalPfp.src = DEFAULT_AVATAR;
+            modalBanner.src = DEFAULT_BANNER;
+            modalLikes.innerText = "0 SOULS";
+            btnLike.classList.add('grayscale');
+
+            // Setup View/Edit Mode
+            const isMe = (uid === currentUser.uid);
+            if (isMe) {
+                btnEdit.classList.remove('hidden');
+                btnSave.classList.add('hidden');
+            } else {
+                btnEdit.classList.add('hidden');
+                btnSave.classList.add('hidden');
+            }
+            
+            // Default to Read Mode
+            toggleEditMode(false);
+
+            // Fetch Data
+            try {
+                const docRef = doc(db, "users", uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    modalName.innerText = (data.displayName || "ANON").toUpperCase();
+                    modalBio.innerText = data.bio || "No lore available.";
+                    modalAge.innerText = `LVL: ${data.age || '0'}`;
+                    modalGender.innerText = `CLASS: ${data.gender || 'NPC'}`;
+                    if(data.pfpURL) modalPfp.src = data.pfpURL;
+                    if(data.bannerURL) modalBanner.src = data.bannerURL;
+                    
+                    const likes = data.likedBy ? data.likedBy.length : 0;
+                    modalLikes.innerText = `${likes} SOUL${likes !== 1 ? 'S' : ''}`;
+                    
+                    if (data.likedBy && data.likedBy.includes(currentUser.uid)) {
+                        btnLike.classList.remove('grayscale');
+                    }
+                } else {
+                    // Fallback for new users
+                    modalName.innerText = activeUsersMap.get(uid)?.name?.toUpperCase() || "ANON";
+                }
+            } catch (e) {
+                console.error("Profile fetch error:", e);
+                addNotification("ERROR ACCESSING SOUL DATA", "error");
+            }
+        }
+
+        function toggleEditMode(isEdit) {
+            if (isEdit) {
+                readModeInfo.classList.add('hidden');
+                editForm.classList.remove('hidden');
+                btnEdit.classList.add('hidden');
+                btnSave.classList.remove('hidden');
+                
+                // Pre-fill inputs
+                inputBio.value = modalBio.innerText === "No lore available." ? "" : modalBio.innerText;
+                inputAge.value = modalAge.innerText.replace("LVL: ", "");
+                inputGender.value = modalGender.innerText.replace("CLASS: ", "");
+                
+                // Show Overlays
+                bannerOverlay.classList.remove('hidden');
+                bannerOverlay.classList.add('flex');
+                pfpOverlay.classList.remove('hidden');
+                pfpOverlay.classList.add('flex');
+            } else {
+                readModeInfo.classList.remove('hidden');
+                editForm.classList.add('hidden');
+                if (currentProfileUid === currentUser.uid) btnEdit.classList.remove('hidden');
+                btnSave.classList.add('hidden');
+                
+                // Hide Overlays
+                bannerOverlay.classList.add('hidden');
+                bannerOverlay.classList.remove('flex');
+                pfpOverlay.classList.add('hidden');
+                pfpOverlay.classList.remove('flex');
+            }
+        }
+
+        // Button Handlers
+        btnClose.onclick = () => modal.classList.add('hidden');
+        btnEdit.onclick = () => toggleEditMode(true);
+        myProfileBtn.onclick = () => openProfile(currentUser.uid);
+        
+        // --- BASE64 HELPER ---
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        // --- INSTANT PREVIEW HANDLERS ---
+        uploadPfp.onchange = async (e) => {
+            if(e.target.files[0]) {
+                const base64 = await toBase64(e.target.files[0]);
+                modalPfp.src = base64; // Show instantly
+            }
+        };
+        uploadBanner.onchange = async (e) => {
+            if(e.target.files[0]) {
+                 const base64 = await toBase64(e.target.files[0]);
+                 modalBanner.src = base64; // Show instantly
+            }
+        };
+
+        btnSave.onclick = async () => {
+            if (!currentProfileUid) return;
+            btnSave.innerText = "SAVING...";
+            
+            const newData = {
+                bio: inputBio.value,
+                age: inputAge.value,
+                gender: inputGender.value,
+                displayName: currentUser.displayName
+            };
+
+            try {
+                // Upload Images via Base64 to bypass Storage CORS
+                // Limits increased: PFP 1MB, Banner 2MB
+                if (uploadPfp.files[0]) {
+                    const file = uploadPfp.files[0];
+                    if (file.size > 1024 * 1024) { // 1MB Limit
+                        addNotification("PFP TOO CHONKY (Max 1MB). Compress it.", "error");
+                        btnSave.innerText = "SAVE_GAME";
+                        return;
+                    }
+                    newData.pfpURL = await toBase64(file);
+                }
+                
+                if (uploadBanner.files[0]) {
+                     const file = uploadBanner.files[0];
+                    if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+                        addNotification("BANNER TOO THICC (Max 2MB). Compress it.", "error");
+                        btnSave.innerText = "SAVE_GAME";
+                        return;
+                    }
+                    newData.bannerURL = await toBase64(file);
+                }
+
+                await setDoc(doc(db, "users", currentUser.uid), newData, { merge: true });
+                beep(600);
+                addNotification("GAME SAVED", "success");
+                btnSave.innerText = "SAVE_GAME";
+                toggleEditMode(false); // Switch back to view mode
+            } catch (e) {
+                // Specific error for Firestore size limit
+                if (e.message.includes("exceeds the maximum allowed size")) {
+                    addNotification("DB REJECT: FILE TOO FAT. TOTAL < 1MB.", "error");
+                } else {
+                    addNotification("SAVE FAILED: " + e.message, "error");
+                }
+                btnSave.innerText = "RETRY";
+            }
+        };
+
+        btnLike.onclick = async () => {
+            if (currentProfileUid === currentUser.uid) {
+                addNotification("NARCISSISM DETECTED", "error");
+                return;
+            }
+            
+            const ref = doc(db, "users", currentProfileUid);
+            // Optimistic update
+            const isLiked = !btnLike.classList.contains('grayscale');
+            if (isLiked) {
+                btnLike.classList.add('grayscale');
+                await updateDoc(ref, { likedBy: arrayRemove(currentUser.uid) });
+            } else {
+                btnLike.classList.remove('grayscale');
+                // Ensure doc exists before updating
+                const snap = await getDoc(ref);
+                if(!snap.exists()) {
+                    await setDoc(ref, { likedBy: [currentUser.uid] }, { merge: true });
+                } else {
+                    await updateDoc(ref, { likedBy: arrayUnion(currentUser.uid) });
+                }
+                
+                // Animate Flame
+                const flame = document.createElement('div');
+                flame.innerText = "🔥";
+                flame.style.position = "fixed";
+                flame.style.left = event.clientX + "px";
+                flame.style.top = event.clientY + "px";
+                flame.style.fontSize = "2rem";
+                flame.style.pointerEvents = "none";
+                document.body.appendChild(flame);
+                anime({
+                    targets: flame,
+                    translateY: -100,
+                    opacity: 0,
+                    duration: 1000,
+                    easing: 'easeOutExpo',
+                    complete: () => flame.remove()
+                });
+                beep(800);
+            }
+            // Refresh stats
+            const updatedSnap = await getDoc(ref);
+            const count = updatedSnap.data().likedBy ? updatedSnap.data().likedBy.length : 0;
+            modalLikes.innerText = `${count} SOUL${count!==1?'S':''}`;
+        };
+
+        // File Input Triggers
+        bannerOverlay.onclick = () => uploadBanner.click();
+        pfpOverlay.onclick = () => uploadPfp.click();
+
+        // --- GLITCH BACKGROUND FX ---
+        setInterval(() => {
+            const bubbles = document.querySelectorAll('.message-bubble');
+            if (bubbles.length > 0) {
+                const target = bubbles[Math.floor(Math.random() * bubbles.length)];
+                target.style.transform = `translate(${Math.random()*2-1}px, ${Math.random()*2-1}px)`;
+                setTimeout(() => target.style.transform = 'none', 100);
+            }
+        }, 1000);
+
     </script>
 </body>
 </html>
