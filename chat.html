@@ -394,6 +394,7 @@
         <button id="ctx-pm">PM USER</button>
         <button id="ctx-add-friend" class="text-green-400">ADD FRIEND</button>
         <button id="ctx-block" class="text-red-500 hover:bg-red-900">BLOCK</button>
+        <button id="ctx-unblock" class="text-yellow-500 hover:bg-yellow-900 hidden">UNBLOCK</button>
         <button id="ctx-action" class="hidden text-red-500 border-t-2 border-red-500">ADMIN NUKE</button>
     </div>
 
@@ -548,6 +549,7 @@
         const ctxPm = document.getElementById('ctx-pm');
         const ctxAddFriend = document.getElementById('ctx-add-friend');
         const ctxBlock = document.getElementById('ctx-block');
+        const ctxUnblock = document.getElementById('ctx-unblock');
         const ctxAction = document.getElementById('ctx-action');
         
         const pmContainer = document.getElementById('pm-container');
@@ -741,6 +743,18 @@
             });
             
             addNotification("USER BLOCKED", "error");
+            contextMenu.style.display = 'none';
+        };
+
+        ctxUnblock.onclick = async () => {
+            if(!selectedUserForContext) return;
+            const target = selectedUserForContext.uid;
+            
+            await updateDoc(doc(db, "users", currentUser.uid), {
+                blocked: arrayRemove(target)
+            });
+            
+            addNotification("USER UNBLOCKED", "success");
             contextMenu.style.display = 'none';
         };
 
@@ -978,6 +992,18 @@
                 ctxAddFriend.classList.add('hidden');
             } else {
                 ctxAddFriend.classList.remove('hidden');
+            }
+
+            // Adjust Block/Unblock
+            if (myBlocked.has(uid)) {
+                ctxBlock.classList.add('hidden');
+                ctxUnblock.classList.remove('hidden');
+                ctxAddFriend.classList.add('hidden');
+                ctxPm.classList.add('hidden'); 
+            } else {
+                ctxBlock.classList.remove('hidden');
+                ctxUnblock.classList.add('hidden');
+                ctxPm.classList.remove('hidden');
             }
         }
 
@@ -1359,29 +1385,35 @@
             onlineList.innerHTML = '';
             renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
             activeUsersMap.forEach((u, uid) => {
-                // Filter Blocked Users from Online List
-                if (uid !== currentUser.uid && !myBlocked.has(uid)) {
+                if (uid !== currentUser.uid) {
                     renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
                 }
             });
         }
 
         function renderUserItem(uid, name, isSelf, pfpUrl) {
+            const isBlocked = myBlocked.has(uid);
+
             const div = document.createElement('div');
             div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform relative";
+            if (isBlocked) div.classList.add('opacity-50');
+
             div.onclick = (e) => {
                 if (isSelf) openProfile(uid);
                 else showContextMenu(e, uid, name, pfpUrl);
             };
 
+            const nameClass = isSelf ? 'text-green-400' : (isBlocked ? 'text-red-500 line-through' : 'text-purple-400');
+            const statusText = isBlocked ? 'BLOCKED' : 'Online';
+
             div.innerHTML = `
                 <div class="relative pointer-events-none">
-                    <img src="${pfpUrl}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover">
-                    <div class="absolute -bottom-1 -right-1 w-2 h-2 ${isSelf ? 'bg-green-500' : 'bg-purple-500'} border border-black animate-pulse"></div>
+                    <img src="${pfpUrl}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover ${isBlocked ? 'grayscale' : ''}">
+                    <div class="absolute -bottom-1 -right-1 w-2 h-2 ${isSelf ? 'bg-green-500' : (isBlocked ? 'bg-red-500' : 'bg-purple-500')} border border-black animate-pulse"></div>
                 </div>
                 <div class="pointer-events-none">
-                    <p class="font-bold text-xs ${isSelf ? 'text-green-400' : 'text-purple-400'}">${name} ${isSelf ? '(YOU)' : ''}</p>
-                    <p class="text-[9px] text-gray-500">Online</p>
+                    <p class="font-bold text-xs ${nameClass}">${name} ${isSelf ? '(YOU)' : ''}</p>
+                    <p class="text-[9px] text-gray-500">${statusText}</p>
                 </div>
             `;
             onlineList.appendChild(div);
