@@ -161,7 +161,17 @@
             cursor: pointer;
         }
 
-        /* PM WINDOW STYLES */
+        /* PM CONTAINER & WINDOWS */
+        #pm-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Crucial: Allows clicking through to main input */
+            z-index: 40;
+        }
+
         .pm-window {
             position: absolute;
             width: 320px;
@@ -171,19 +181,30 @@
             box-shadow: 8px 8px 0 #ff00ff;
             display: flex;
             flex-direction: column;
-            z-index: 100;
+            z-index: 100; /* Higher than main chat */
             resize: both;
             overflow: hidden;
             min-width: 250px;
             min-height: 250px;
             top: 100px;
             left: 100px;
+            pointer-events: auto; /* Re-enable clicks for the window itself */
         }
         .pm-window.pinned {
             border-color: #ffd700;
             box-shadow: 8px 8px 0 #ffd700;
             z-index: 150 !important;
         }
+        /* Add a pin indicator */
+        .pm-window.pinned::after {
+            content: "📌";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 20px;
+            pointer-events: none;
+        }
+
         .pm-header {
             background: #222;
             padding: 8px;
@@ -193,10 +214,12 @@
             align-items: center;
             border-bottom: 2px solid #fff;
         }
-        .pm-header:active {
-            cursor: grabbing;
-            background: #444;
+        /* When pinned, change cursor */
+        .pm-window.pinned .pm-header {
+            cursor: default;
+            background: #420;
         }
+
         .pm-messages {
             flex-grow: 1;
             overflow-y: auto;
@@ -712,8 +735,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        // Import Customization
-        import { initCustomizationUI, applyProfileStyles } from "./customization.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -827,6 +848,147 @@
         // Default Assets
         const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
         const DEFAULT_BANNER = "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif";
+
+        // ==========================================
+        // CUSTOMIZATION LOGIC (INLINED)
+        // ==========================================
+        const bgOptions = Array.from({ length: 50 }, (_, i) => ({ id: `bg-theme-${i + 1}`, name: `Theme ${i + 1}` }));
+        bgOptions[0].name = "Void Black"; bgOptions[1].name = "Matrix Code"; bgOptions[2].name = "Cyber Grid"; bgOptions[3].name = "Lava Lamp"; bgOptions[4].name = "Deep Space"; bgOptions[49].name = "Glitch Storm";
+
+        const nameOptions = Array.from({ length: 50 }, (_, i) => ({ id: `name-fx-${i + 1}`, name: `Effect ${i + 1}` }));
+        nameOptions[0].name = "Standard"; nameOptions[1].name = "Neon Pink"; nameOptions[2].name = "Gold Leaf"; nameOptions[3].name = "Ice Shimmer"; nameOptions[49].name = "Corrupted";
+
+        const bioOptions = Array.from({ length: 50 }, (_, i) => ({ id: `bio-fx-${i + 1}`, name: `Style ${i + 1}` }));
+        bioOptions[0].name = "Standard"; bioOptions[1].name = "Terminal Green"; bioOptions[2].name = "Gothic Red"; bioOptions[49].name = "Rainbow Wave";
+
+        function applyProfileStyles(modalElement, styles) {
+            if (!styles) return;
+            // 1. Background
+            const classesToRemove = Array.from(modalElement.classList).filter(c => c.startsWith('bg-theme-'));
+            modalElement.classList.remove(...classesToRemove);
+            if (styles.background) modalElement.classList.add(styles.background);
+
+            // 2. Name FX
+            const nameEl = modalElement.querySelector('#modal-name');
+            if (nameEl) {
+                const nameClasses = Array.from(nameEl.classList).filter(c => c.startsWith('name-fx-'));
+                nameEl.classList.remove(...nameClasses);
+                if (styles.name) nameEl.classList.add(styles.name);
+            }
+
+            // 3. Bio FX
+            const bioEl = modalElement.querySelector('#modal-bio');
+            if (bioEl) {
+                const bioClasses = Array.from(bioEl.classList).filter(c => c.startsWith('bio-fx-'));
+                bioEl.classList.remove(...bioClasses);
+                if (styles.bio) bioEl.classList.add(styles.bio);
+            }
+        }
+
+        function initCustomizationUI(container, user, db, currentStyles = {}) {
+            container.innerHTML = '';
+            container.className = "w-full h-full flex flex-col bg-gray-900 text-white relative";
+
+            let selection = {
+                background: currentStyles.background || 'bg-theme-1',
+                name: currentStyles.name || 'name-fx-1',
+                bio: currentStyles.bio || 'bio-fx-1'
+            };
+
+            const header = document.createElement('div');
+            header.className = "flex border-b-2 border-white bg-black";
+            
+            const tabs = ['BACKGROUND', 'NAME_FX', 'BIO_STYLE'];
+            let activeTab = 'BACKGROUND';
+
+            const renderTabs = () => {
+                header.innerHTML = '';
+                tabs.forEach(tab => {
+                    const btn = document.createElement('button');
+                    btn.className = `flex-1 py-2 font-pixel text-[8px] md:text-[10px] hover:bg-purple-900 transition-colors ${activeTab === tab ? 'bg-purple-600 text-white' : 'text-gray-400'}`;
+                    btn.innerText = tab;
+                    btn.onclick = () => { activeTab = tab; renderContent(); renderTabs(); };
+                    header.appendChild(btn);
+                });
+            };
+
+            const contentArea = document.createElement('div');
+            contentArea.className = "flex-1 overflow-y-auto p-2 grid grid-cols-3 gap-2";
+
+            const renderContent = () => {
+                contentArea.innerHTML = '';
+                let options = [];
+                let currentKey = '';
+
+                if (activeTab === 'BACKGROUND') { options = bgOptions; currentKey = 'background'; }
+                if (activeTab === 'NAME_FX') { options = nameOptions; currentKey = 'name'; }
+                if (activeTab === 'BIO_STYLE') { options = bioOptions; currentKey = 'bio'; }
+
+                options.forEach(opt => {
+                    const item = document.createElement('div');
+                    const isSelected = selection[currentKey] === opt.id;
+                    item.className = `cursor-pointer border-2 p-1 text-center text-[8px] hover:border-white transition-all flex flex-col items-center justify-between h-20 bg-black ${isSelected ? 'border-yellow-400' : 'border-gray-700'}`;
+                    
+                    // PREVIEW BOX
+                    const previewBox = document.createElement('div');
+                    previewBox.className = "w-full h-10 border border-gray-500 mb-1 flex items-center justify-center overflow-hidden relative";
+                    
+                    if (activeTab === 'BACKGROUND') {
+                        previewBox.classList.add(opt.id);
+                    } else if (activeTab === 'NAME_FX') {
+                        const span = document.createElement('span');
+                        span.className = `font-bold text-lg ${opt.id}`;
+                        span.innerText = "Name";
+                        previewBox.appendChild(span);
+                    } else if (activeTab === 'BIO_STYLE') {
+                         const span = document.createElement('span');
+                        span.className = `font-bold text-[8px] p-1 text-left w-full h-full overflow-hidden ${opt.id}`;
+                        span.innerText = "Lore goes here...";
+                        previewBox.appendChild(span);
+                    }
+                    
+                    item.appendChild(previewBox);
+
+                    // LABEL
+                    const label = document.createElement('div');
+                    label.className = "truncate w-full font-pixel text-[6px] text-gray-400";
+                    label.innerText = opt.name;
+                    item.appendChild(label);
+
+                    item.onclick = async () => {
+                        selection[currentKey] = opt.id;
+                        applyProfileStyles(document.getElementById('modal-content-container'), selection);
+                        renderContent();
+                        try {
+                            await updateDoc(doc(db, "users", user.uid), {
+                                profileStyles: selection
+                            });
+                        } catch(e) { console.error("Save failed", e); }
+                    };
+
+                    contentArea.appendChild(item);
+                });
+            };
+
+            const footer = document.createElement('div');
+            footer.className = "border-t-2 border-white p-2 flex justify-end bg-black";
+            const closeBtn = document.createElement('button');
+            closeBtn.innerText = "DONE";
+            closeBtn.className = "brutal-btn px-4 py-1 text-[10px]";
+            closeBtn.onclick = () => { window.openProfile(user.uid); };
+            footer.appendChild(closeBtn);
+
+            renderTabs();
+            renderContent();
+
+            container.appendChild(header);
+            container.appendChild(contentArea);
+            container.appendChild(footer);
+        }
+
+        // ==========================================
+        // END CUSTOMIZATION LOGIC
+        // ==========================================
 
         // --- AUTH CHECK ---
         onAuthStateChanged(auth, (user) => {
@@ -1384,6 +1546,9 @@
             handle.onmousedown = dragMouseDown;
 
             function dragMouseDown(e) {
+                // FIXED PINNING BUG: Check for pinned class
+                if (el.classList.contains('pinned')) return;
+
                 e.preventDefault();
                 pos3 = e.clientX;
                 pos4 = e.clientY;
