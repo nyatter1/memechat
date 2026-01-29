@@ -203,14 +203,14 @@
         </div>
     </div>
 
-    <!-- MARQUEE FOOTER (Scaled specifically to cover width) -->
+    <!-- MARQUEE FOOTER -->
     <div class="marquee-container transform scale-[0.8] origin-bottom w-[125%] left-[-12.5%]">
         <marquee scrollamount="12" scrolldelay="100">
             WARNING: DARK MODE ACTIVATED /// PROTECT YOUR EYES /// THE VOID STARES BACK /// NO REFUNDS ON SOULS /// CHAOS REIGNS ETERNAL
         </marquee>
     </div>
 
-    <!-- AUDIO (Fake/Simulated) -->
+    <!-- AUDIO TOGGLE -->
     <div class="fixed bottom-20 right-4 z-50 transform scale-[0.8] origin-bottom-right">
         <button onclick="toggleChaos()" class="bg-gray-900 text-white border-4 border-white p-2 rounded-full shadow-lg hover:rotate-12 transition-transform">
             🤡 CHAOS MODE
@@ -249,27 +249,8 @@
         const body = document.body;
         const container = document.querySelector('.form-container');
 
-        // --- SOUND EFFECTS ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-
-        function beep(freq = 440, type = 'square') {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        // --- TOGGLE LOGIC ---
+        // --- TOGGLE LOGIC (No Sound) ---
         window.switchTab = function(isLogin) {
-            beep(isLogin ? 600 : 300, 'sawtooth');
             if (isLogin) {
                 formLogin.classList.remove('hidden');
                 formLogin.classList.add('flex');
@@ -316,14 +297,10 @@
         inputs.forEach(input => {
             input.addEventListener('input', () => {
                 spawnEmoji();
-                spawnEmoji();
                 if (Math.random() > 0.8) {
                     const colors = ['#ffffff', '#ff00ff', '#00ffff', '#ffff00', '#00ff00'];
                     container.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
                 }
-            });
-            input.addEventListener('focus', () => {
-                beep(800, 'sine');
             });
         });
 
@@ -336,14 +313,12 @@
             
             try {
                 btn.innerText = "AUTHENTICATING...";
-                beep(100, 'square');
                 await signInWithEmailAndPassword(auth, email, password);
                 body.style.animation = "shake 0.5s infinite";
                 window.location.href = "/chat";
             } catch (error) {
                 btn.innerText = "ENTER THE VOID";
                 alert("ACCESS DENIED: " + error.message);
-                beep(150, 'sawtooth');
             }
         });
 
@@ -363,7 +338,6 @@
 
             try {
                 btn.innerText = "SACRIFICING...";
-                beep(200, 'square');
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(userCredential.user, { displayName: name });
                 body.style.animation = "shake 0.5s infinite";
@@ -371,7 +345,6 @@
             } catch (error) {
                 btn.innerText = "SACRIFICE & JOIN";
                 alert("RITUAL FAILED: " + error.message);
-                beep(150, 'sawtooth');
             }
         });
 
@@ -393,7 +366,6 @@
                     const y = Math.random() * 10 - 5;
                     document.body.style.transform = `translate(${x}px, ${y}px)`;
                 }, 100);
-                beep(50, 'sawtooth');
             }
         }
 
