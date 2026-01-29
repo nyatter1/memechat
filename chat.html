@@ -131,6 +131,25 @@
             from { transform: translateX(20px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* GLOW EFFECT FOR MENTIONS */
+        .glow-text {
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #ff00de, 0 0 20px #ff00de;
+            font-weight: bold;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 5px #fff, 0 0 10px #ff00de; }
+            50% { text-shadow: 0 0 10px #fff, 0 0 20px #00ffff; }
+            100% { text-shadow: 0 0 5px #fff, 0 0 10px #ff00de; }
+        }
+        
+        .username-link:hover {
+            color: #ffff00;
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
@@ -275,6 +294,7 @@
                        <span id="modal-likes" class="font-pixel text-yellow-400 text-xs">0 SOULS</span>
                    </div>
                    <div class="flex gap-2">
+                       <button id="btn-poke" class="brutal-btn px-3 py-2 text-[10px] bg-purple-600 hover:bg-purple-500 hidden">👉 POKE</button>
                        <button id="btn-edit" class="brutal-btn px-3 py-2 text-[10px] hidden hover:bg-pink-400">EDIT_DATA</button>
                        <button id="btn-save" class="brutal-btn px-3 py-2 text-[10px] bg-green-600 hidden hover:bg-green-500">SAVE_GAME</button>
                        <button id="btn-close" class="border-2 border-white px-3 py-2 text-[10px] hover:bg-white hover:text-black font-pixel transition-colors text-white bg-black">CLOSE</button>
@@ -287,7 +307,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -324,6 +344,7 @@
         const btnSave = document.getElementById('btn-save');
         const btnClose = document.getElementById('btn-close');
         const btnLike = document.getElementById('btn-like');
+        const btnPoke = document.getElementById('btn-poke');
         
         const readModeInfo = document.getElementById('read-mode-info');
         const editForm = document.getElementById('edit-form');
@@ -351,6 +372,7 @@
 
         let notifications = [];
         let unreadCount = 0;
+        let viewedProfilesSession = new Set(); // Prevent spamming views in one session
 
         // Default Assets
         const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
@@ -364,6 +386,7 @@
                 currentUser = user;
                 initChat();
                 listenToMyProfile();
+                listenForRemoteNotifications();
             }
         });
 
@@ -375,23 +398,66 @@
         // --- SOUNDS ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ac = new AudioContext();
-        function beep(freq = 150) {
+        function beep(freq = 150, type = 'sawtooth') {
             if(ac.state === 'suspended') ac.resume();
             const osc = ac.createOscillator();
             const g = ac.createGain();
             osc.connect(g);
             g.connect(ac.destination);
-            osc.type='sawtooth';
+            osc.type = type;
             osc.frequency.setValueAtTime(freq, ac.currentTime);
             osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.1);
             osc.start();
             osc.stop(ac.currentTime + 0.1);
         }
 
-        // --- NOTIFICATION CENTER LOGIC ---
+        // --- REMOTE NOTIFICATION LOGIC ---
+        async function sendRemoteNotification(targetUid, type, message) {
+            if(targetUid === currentUser.uid) return; // Don't notify self
+            try {
+                await addDoc(collection(db, "notifications"), {
+                    recipientUid: targetUid,
+                    senderUid: currentUser.uid,
+                    senderName: currentUser.displayName || "ANON",
+                    type: type,
+                    message: message,
+                    createdAt: serverTimestamp(),
+                    read: false
+                });
+            } catch(e) {
+                console.error("Failed to send notif", e);
+            }
+        }
+
+        function listenForRemoteNotifications() {
+            const q = query(
+                collection(db, "notifications"), 
+                where("recipientUid", "==", currentUser.uid), 
+                orderBy("createdAt", "desc"), 
+                limit(10)
+            );
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        // Avoid showing old notifications from before page load (rough check)
+                        const now = Date.now();
+                        const notifTime = data.createdAt ? data.createdAt.toMillis() : now;
+                        
+                        // If notification is recent (within last 10 seconds) render it
+                        if (now - notifTime < 10000) {
+                             addNotification(data.message, data.type);
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- LOCAL NOTIFICATION CENTER UI ---
         function addNotification(message, type = 'info') {
             const notif = {
-                id: Date.now(),
+                id: Date.now() + Math.random(),
                 message,
                 type,
                 timestamp: new Date().toLocaleTimeString()
@@ -399,8 +465,13 @@
             notifications.unshift(notif); // Add to top
             unreadCount++;
             updateBadge();
-            renderNotifications(); // Render even if hidden so it's ready
-            beep(type === 'error' ? 80 : 800);
+            renderNotifications();
+            
+            // Sounds based on type
+            if (type === 'error') beep(80, 'square');
+            else if (type === 'poke') { beep(600, 'sine'); beep(800, 'sine'); }
+            else if (type === 'mention') { beep(1000, 'sine'); }
+            else beep(800, 'sawtooth');
         }
 
         function updateBadge() {
@@ -413,7 +484,6 @@
         }
 
         function renderNotifications() {
-            // Keep header, clear list
             notifList.innerHTML = '';
             
             if (notifications.length === 0) {
@@ -423,12 +493,18 @@
 
             notifications.forEach((n) => {
                 const item = document.createElement('div');
-                item.className = `notif-item p-2 border border-white mb-2 flex justify-between items-start gap-2 ${n.type === 'error' ? 'bg-red-900/50' : (n.type === 'success' ? 'bg-green-900/50' : 'bg-gray-800')}`;
-                
+                let bgClass = 'bg-gray-800';
                 let icon = 'ℹ️';
-                if(n.type === 'error') icon = '💀';
-                if(n.type === 'success') icon = '💾';
 
+                if(n.type === 'error') { bgClass = 'bg-red-900/50'; icon = '💀'; }
+                if(n.type === 'success') { bgClass = 'bg-green-900/50'; icon = '💾'; }
+                if(n.type === 'poke') { bgClass = 'bg-purple-900/50'; icon = '👉'; }
+                if(n.type === 'view') { bgClass = 'bg-blue-900/50'; icon = '👀'; }
+                if(n.type === 'like') { bgClass = 'bg-yellow-900/50'; icon = '🔥'; }
+                if(n.type === 'mention') { bgClass = 'bg-pink-900/50'; icon = '📢'; }
+
+                item.className = `notif-item p-2 border border-white mb-2 flex justify-between items-start gap-2 ${bgClass}`;
+                
                 item.innerHTML = `
                     <div class="flex gap-2">
                         <span class="text-lg">${icon}</span>
@@ -443,19 +519,17 @@
             });
         }
 
-        // Toggle Panel
         notifBtn.addEventListener('click', () => {
             const isHidden = notifPanel.classList.contains('hidden');
             if (isHidden) {
                 notifPanel.classList.remove('hidden');
-                unreadCount = 0; // Clear unread on open
+                unreadCount = 0; 
                 updateBadge();
             } else {
                 notifPanel.classList.add('hidden');
             }
         });
 
-        // Global handlers for HTML inline calls
         window.deleteNotif = (id) => {
             notifications = notifications.filter(n => n.id !== id);
             renderNotifications();
@@ -473,7 +547,7 @@
                     const data = docSnap.data();
                     if (data.pfpURL) {
                         currentUserPfp = data.pfpURL;
-                        updateOnlineList(); // Update sidebar immediately
+                        updateOnlineList();
                     }
                 }
             });
@@ -499,9 +573,7 @@
                     const isSelf = data.uid === currentUser.uid;
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
                     
-                    // Populate online list map from message data
                     if(data.uid && data.displayName) {
-                        // If user not in map OR we found a message with a PFP and the map entry has none, update it
                         if (!activeUsersMap.has(data.uid) || (data.pfpURL && !activeUsersMap.get(data.uid).pfp)) {
                             activeUsersMap.set(data.uid, { name: data.displayName, pfp: data.pfpURL });
                         }
@@ -510,21 +582,31 @@
                     const msgDiv = document.createElement('div');
                     msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
                     
-                    // PFP: Use data.pfpURL from message if available, else default
                     const pfpSrc = data.pfpURL || DEFAULT_AVATAR;
-                    
-                    // Add click handler to avatar
                     const avatarHTML = `<img src="${pfpSrc}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
+
+                    // TAGGING & GLOW LOGIC
+                    let processedText = escapeHtml(data.text);
+                    const myName = currentUser.displayName;
+                    let isMentioned = false;
+
+                    if (myName && data.text.includes(myName) && !isSelf) {
+                        // Replace my name with glowing span
+                        const regex = new RegExp(escapeRegExp(myName), 'g');
+                        processedText = processedText.replace(regex, `<span class="glow-text">${myName}</span>`);
+                        isMentioned = true;
+                    }
+
+                    // Username Click Logic (Add class for styling/js)
+                    const displayNameHTML = `<span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1 username-link" onclick="window.tagUser('${data.displayName}')">${isSelf ? 'YOU' : (data.displayName || 'ANON')}</span>`;
 
                     msgDiv.innerHTML = `
                         ${avatarHTML}
                         <div class="flex flex-col ${isSelf ? 'items-end' : ''} max-w-[85%]">
-                            <span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1">
-                                ${isSelf ? 'YOU' : (data.displayName || 'ANON')} 
-                                <span class="text-gray-500 text-[10px]">@ ${date}</span>
-                            </span>
+                            ${displayNameHTML} 
+                            <span class="text-gray-500 text-[10px]">@ ${date}</span>
                             <div class="message-bubble ${isSelf ? 'message-self bg-black shadow-[4px_4px_0_white]' : 'bg-black'} p-2 text-sm relative">
-                                ${escapeHtml(data.text)}
+                                ${processedText}
                             </div>
                         </div>
                     `;
@@ -536,19 +618,35 @@
 
                 if (!isFirstLoad) {
                     snapshot.docChanges().forEach((change) => {
-                        if (change.type === "added") beep();
+                        if (change.type === "added") {
+                            const data = change.doc.data();
+                            // Sound for any message
+                            beep(150); 
+                            // Special sound/logic if mentioned
+                            if (currentUser.displayName && data.text.includes(currentUser.displayName) && data.uid !== currentUser.uid) {
+                                addNotification(`MENTIONED BY ${data.displayName}`, 'mention');
+                            }
+                        }
                     });
                 }
                 isFirstLoad = false;
             });
         }
+        
+        // Helper for Regex
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Tag User Function
+        window.tagUser = (name) => {
+            input.value += `${name} `;
+            input.focus();
+        };
 
         function updateOnlineList() {
             onlineList.innerHTML = '';
-            // Render YOU first with LIVE PFP (local state)
             renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
-            
-            // Render others from the map built from messages
             activeUsersMap.forEach((u, uid) => {
                 if (uid !== currentUser.uid) {
                     renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
@@ -584,10 +682,9 @@
                     uid: currentUser.uid,
                     displayName: currentUser.displayName || 'Anon',
                     createdAt: serverTimestamp(),
-                    pfpURL: currentUserPfp // Bake PFP into message for history consistency
+                    pfpURL: currentUserPfp
                 });
             } catch (e) {
-                console.error("Error sending message: ", e);
                 addNotification("MESSAGE LOST IN VOID", "error");
             }
         }
@@ -606,10 +703,7 @@
 
         // --- PROFILE LOGIC ---
         
-        // Expose to window for inline onclicks
-        window.openProfile = openProfile;
-
-        async function openProfile(uid) {
+        window.openProfile = async (uid) => {
             currentProfileUid = uid;
             modal.classList.remove('hidden');
             beep(300);
@@ -624,20 +718,27 @@
             modalLikes.innerText = "0 SOULS";
             btnLike.classList.add('grayscale');
 
-            // Setup View/Edit Mode
             const isMe = (uid === currentUser.uid);
+            
+            // Notification: Profile View
+            if (!isMe && !viewedProfilesSession.has(uid)) {
+                sendRemoteNotification(uid, "view", `SOMEONE IS PERCEIVING YOU...`);
+                viewedProfilesSession.add(uid);
+            }
+
+            // UI Buttons
             if (isMe) {
                 btnEdit.classList.remove('hidden');
                 btnSave.classList.add('hidden');
+                btnPoke.classList.add('hidden');
             } else {
                 btnEdit.classList.add('hidden');
                 btnSave.classList.add('hidden');
+                btnPoke.classList.remove('hidden');
             }
             
-            // Default to Read Mode
             toggleEditMode(false);
 
-            // Fetch Data
             try {
                 const docRef = doc(db, "users", uid);
                 const docSnap = await getDoc(docRef);
@@ -658,14 +759,35 @@
                         btnLike.classList.remove('grayscale');
                     }
                 } else {
-                    // Fallback for new users
                     modalName.innerText = activeUsersMap.get(uid)?.name?.toUpperCase() || "ANON";
                 }
             } catch (e) {
-                console.error("Profile fetch error:", e);
                 addNotification("ERROR ACCESSING SOUL DATA", "error");
             }
-        }
+        };
+
+        // POKE LOGIC
+        btnPoke.onclick = async () => {
+            if (!currentProfileUid || currentProfileUid === currentUser.uid) return;
+            
+            // Cooldown check (localStorage)
+            const lastPokeKey = `lastPoke_${currentProfileUid}`;
+            const lastPokeTime = localStorage.getItem(lastPokeKey);
+            const now = Date.now();
+            
+            if (lastPokeTime && now - parseInt(lastPokeTime) < 60000) {
+                addNotification("CHILL. POKE RECHARGING (1 MIN).", "error");
+                return;
+            }
+
+            btnPoke.innerText = "POKING...";
+            await sendRemoteNotification(currentProfileUid, "poke", "YOU BEEN TOUCHED 👈");
+            localStorage.setItem(lastPokeKey, now.toString());
+            
+            btnPoke.innerText = "POKED!";
+            setTimeout(() => btnPoke.innerText = "👉 POKE", 2000);
+            addNotification("POKE DELIVERED", "success");
+        };
 
         function toggleEditMode(isEdit) {
             if (isEdit) {
@@ -673,13 +795,12 @@
                 editForm.classList.remove('hidden');
                 btnEdit.classList.add('hidden');
                 btnSave.classList.remove('hidden');
+                btnPoke.classList.add('hidden');
                 
-                // Pre-fill inputs
                 inputBio.value = modalBio.innerText === "No lore available." ? "" : modalBio.innerText;
                 inputAge.value = modalAge.innerText.replace("LVL: ", "");
                 inputGender.value = modalGender.innerText.replace("CLASS: ", "");
                 
-                // Show Overlays
                 bannerOverlay.classList.remove('hidden');
                 bannerOverlay.classList.add('flex');
                 pfpOverlay.classList.remove('hidden');
@@ -688,9 +809,10 @@
                 readModeInfo.classList.remove('hidden');
                 editForm.classList.add('hidden');
                 if (currentProfileUid === currentUser.uid) btnEdit.classList.remove('hidden');
+                else btnPoke.classList.remove('hidden');
+
                 btnSave.classList.add('hidden');
                 
-                // Hide Overlays
                 bannerOverlay.classList.add('hidden');
                 bannerOverlay.classList.remove('flex');
                 pfpOverlay.classList.add('hidden');
@@ -737,11 +859,9 @@
             };
 
             try {
-                // Upload Images via Base64 to bypass Storage CORS
-                // Limits increased: PFP 1MB, Banner 2MB
                 if (uploadPfp.files[0]) {
                     const file = uploadPfp.files[0];
-                    if (file.size > 1024 * 1024) { // 1MB Limit
+                    if (file.size > 1024 * 1024) { 
                         addNotification("PFP TOO CHONKY (Max 1MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
@@ -751,7 +871,7 @@
                 
                 if (uploadBanner.files[0]) {
                      const file = uploadBanner.files[0];
-                    if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+                    if (file.size > 2 * 1024 * 1024) { 
                         addNotification("BANNER TOO THICC (Max 2MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
@@ -763,9 +883,8 @@
                 beep(600);
                 addNotification("GAME SAVED", "success");
                 btnSave.innerText = "SAVE_GAME";
-                toggleEditMode(false); // Switch back to view mode
+                toggleEditMode(false); 
             } catch (e) {
-                // Specific error for Firestore size limit
                 if (e.message.includes("exceeds the maximum allowed size")) {
                     addNotification("DB REJECT: FILE TOO FAT. TOTAL < 1MB.", "error");
                 } else {
@@ -782,14 +901,12 @@
             }
             
             const ref = doc(db, "users", currentProfileUid);
-            // Optimistic update
             const isLiked = !btnLike.classList.contains('grayscale');
             if (isLiked) {
                 btnLike.classList.add('grayscale');
                 await updateDoc(ref, { likedBy: arrayRemove(currentUser.uid) });
             } else {
                 btnLike.classList.remove('grayscale');
-                // Ensure doc exists before updating
                 const snap = await getDoc(ref);
                 if(!snap.exists()) {
                     await setDoc(ref, { likedBy: [currentUser.uid] }, { merge: true });
@@ -797,7 +914,9 @@
                     await updateDoc(ref, { likedBy: arrayUnion(currentUser.uid) });
                 }
                 
-                // Animate Flame
+                // NOTIFICATION: LIKE
+                sendRemoteNotification(currentProfileUid, "like", "SOMEONE DESIRES YOUR SOUL 🔥");
+
                 const flame = document.createElement('div');
                 flame.innerText = "🔥";
                 flame.style.position = "fixed";
@@ -816,7 +935,7 @@
                 });
                 beep(800);
             }
-            // Refresh stats
+            
             const updatedSnap = await getDoc(ref);
             const count = updatedSnap.data().likedBy ? updatedSnap.data().likedBy.length : 0;
             modalLikes.innerText = `${count} SOUL${count!==1?'S':''}`;
