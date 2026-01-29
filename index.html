@@ -123,7 +123,6 @@
         .marquee-container {
             position: fixed;
             bottom: 0;
-            width: 100%;
             background: #3b0764; /* Dark Purple */
             color: #ffffff;
             font-family: 'Press Start 2P';
@@ -152,80 +151,83 @@
     <!-- FLOATING BACKGROUND MEMES -->
     <div id="emoji-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
 
-    <!-- HEADER -->
-    <h1 class="font-glitch text-6xl md:text-9xl text-white mb-8 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10" data-text="MEME CHAT">
-        MEME<br/><span class="text-purple-400">CHAT</span>
-    </h1>
+    <!-- CONTENT WRAPPER (ZOOMED OUT EFFECT 80%) -->
+    <div class="relative z-20 flex flex-col items-center gap-4 transform scale-[0.8]">
+        <!-- HEADER -->
+        <h1 class="font-glitch text-6xl md:text-9xl text-white mb-8 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10" data-text="MEME CHAT">
+            MEME<br/><span class="text-purple-400">CHAT</span>
+        </h1>
 
-    <!-- MAIN CARD -->
-    <div class="tilt-card relative w-full max-w-md p-2 z-20">
-        
-        <!-- PEEKING CAT -->
-        <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="cat-peek rounded-t-lg border-4 border-white bg-gray-900" alt="Peeking Cat">
-
-        <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
+        <!-- MAIN CARD -->
+        <div class="tilt-card relative w-full max-w-md p-2 z-20">
             
-            <!-- TOGGLE SWITCH -->
-            <div class="flex border-4 border-white mb-6 bg-gray-800">
-                <button id="btn-login" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-yellow-400 text-black hover:bg-yellow-300 transition-colors border-r-4 border-white">
-                    LOG IN
-                </button>
-                <button id="btn-signup" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors">
-                    SIGN UP
-                </button>
+            <!-- PEEKING CAT -->
+            <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="cat-peek rounded-t-lg border-4 border-white bg-gray-900" alt="Peeking Cat">
+
+            <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
+                
+                <!-- TOGGLE SWITCH -->
+                <div class="flex border-4 border-white mb-6 bg-gray-800">
+                    <button id="btn-login" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-yellow-400 text-black hover:bg-yellow-300 transition-colors border-r-4 border-white">
+                        LOG IN
+                    </button>
+                    <button id="btn-signup" class="flex-1 py-3 font-pixel text-xs md:text-sm bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors">
+                        SIGN UP
+                    </button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="form-login" class="flex flex-col gap-4 block">
+                    <div class="group">
+                        <label class="font-pixel text-xs mb-2 block text-gray-300">USER_ID_OR_WHATEVER</label>
+                        <input type="text" placeholder="xX_DarkLord_Xx" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-pink-900 focus:ring-4 focus:ring-pink-500 transition-all transform focus:-rotate-1">
+                    </div>
+                    <div class="group">
+                        <label class="font-pixel text-xs mb-2 block text-gray-300">SECRET_PASSWORD</label>
+                        <input type="password" placeholder="********" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-blue-900 focus:ring-4 focus:ring-blue-500 transition-all transform focus:rotate-1">
+                    </div>
+                    <button type="submit" class="mt-4 bg-white text-black font-pixel py-4 border-4 border-transparent hover:border-pink-500 hover:text-pink-500 hover:bg-black transition-all text-sm brutal-shadow">
+                        ENTER THE VOID
+                    </button>
+                    <p class="text-center text-xs mt-2 cursor-pointer text-gray-400 hover:text-red-500 hover:underline" onclick="alert('SKILL ISSUE TBH')">Forgot Password?</p>
+                </form>
+
+                <!-- SIGNUP FORM -->
+                <form id="form-signup" class="flex flex-col gap-4 hidden">
+                    <div class="group">
+                        <label class="font-pixel text-xs mb-2 block text-gray-300">CHOOSE_NAME</label>
+                        <input type="text" placeholder="CryptoWojak" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-green-900 focus:ring-4 focus:ring-green-500 transition-all">
+                    </div>
+                    <div class="group">
+                        <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_ADDRESS</label>
+                        <input type="email" placeholder="anon@shadow.net" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-yellow-900 focus:ring-4 focus:ring-yellow-500 transition-all">
+                    </div>
+                    <div class="group">
+                        <label class="font-pixel text-xs mb-2 block text-gray-300">SUPER_SECURE_PW</label>
+                        <input type="password" placeholder="password123 (dont)" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-purple-900 focus:ring-4 focus:ring-purple-500 transition-all">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="soul-contract" class="w-6 h-6 border-4 border-white accent-pink-500 bg-gray-800">
+                        <label for="soul-contract" class="text-xs font-bold leading-tight text-gray-300">I agree to sell my soul to the void.</label>
+                    </div>
+                    <button type="submit" class="mt-4 bg-red-800 text-white font-pixel py-4 border-4 border-transparent hover:border-white hover:text-white hover:bg-red-600 transition-all text-sm brutal-shadow animate-pulse">
+                        SACRIFICE & JOIN
+                    </button>
+                </form>
+
             </div>
-
-            <!-- LOGIN FORM -->
-            <form id="form-login" class="flex flex-col gap-4 block">
-                <div class="group">
-                    <label class="font-pixel text-xs mb-2 block text-gray-300">USER_ID_OR_WHATEVER</label>
-                    <input type="text" placeholder="xX_DarkLord_Xx" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-pink-900 focus:ring-4 focus:ring-pink-500 transition-all transform focus:-rotate-1">
-                </div>
-                <div class="group">
-                    <label class="font-pixel text-xs mb-2 block text-gray-300">SECRET_PASSWORD</label>
-                    <input type="password" placeholder="********" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-blue-900 focus:ring-4 focus:ring-blue-500 transition-all transform focus:rotate-1">
-                </div>
-                <button type="submit" class="mt-4 bg-white text-black font-pixel py-4 border-4 border-transparent hover:border-pink-500 hover:text-pink-500 hover:bg-black transition-all text-sm brutal-shadow">
-                    ENTER THE VOID
-                </button>
-                <p class="text-center text-xs mt-2 cursor-pointer text-gray-400 hover:text-red-500 hover:underline" onclick="alert('SKILL ISSUE TBH')">Forgot Password?</p>
-            </form>
-
-            <!-- SIGNUP FORM -->
-            <form id="form-signup" class="flex flex-col gap-4 hidden">
-                <div class="group">
-                    <label class="font-pixel text-xs mb-2 block text-gray-300">CHOOSE_NAME</label>
-                    <input type="text" placeholder="CryptoWojak" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-green-900 focus:ring-4 focus:ring-green-500 transition-all">
-                </div>
-                <div class="group">
-                    <label class="font-pixel text-xs mb-2 block text-gray-300">EMAIL_ADDRESS</label>
-                    <input type="email" placeholder="anon@shadow.net" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-yellow-900 focus:ring-4 focus:ring-yellow-500 transition-all">
-                </div>
-                <div class="group">
-                    <label class="font-pixel text-xs mb-2 block text-gray-300">SUPER_SECURE_PW</label>
-                    <input type="password" placeholder="password123 (dont)" class="w-full bg-gray-800 border-4 border-white p-3 font-bold text-white placeholder-gray-500 focus:outline-none focus:bg-purple-900 focus:ring-4 focus:ring-purple-500 transition-all">
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="soul-contract" class="w-6 h-6 border-4 border-white accent-pink-500 bg-gray-800">
-                    <label for="soul-contract" class="text-xs font-bold leading-tight text-gray-300">I agree to sell my soul to the void.</label>
-                </div>
-                <button type="submit" class="mt-4 bg-red-800 text-white font-pixel py-4 border-4 border-transparent hover:border-white hover:text-white hover:bg-red-600 transition-all text-sm brutal-shadow animate-pulse">
-                    SACRIFICE & JOIN
-                </button>
-            </form>
-
         </div>
     </div>
 
-    <!-- MARQUEE FOOTER -->
-    <div class="marquee-container">
+    <!-- MARQUEE FOOTER (Scaled specifically to cover width) -->
+    <div class="marquee-container transform scale-[0.8] origin-bottom w-[125%] left-[-12.5%]">
         <marquee scrollamount="12" scrolldelay="100">
             WARNING: DARK MODE ACTIVATED /// PROTECT YOUR EYES /// THE VOID STARES BACK /// NO REFUNDS ON SOULS /// CHAOS REIGNS ETERNAL
         </marquee>
     </div>
 
     <!-- AUDIO (Fake/Simulated) -->
-    <div class="fixed bottom-20 right-4 z-50">
+    <div class="fixed bottom-20 right-4 z-50 transform scale-[0.8] origin-bottom-right">
         <button onclick="toggleChaos()" class="bg-gray-900 text-white border-4 border-white p-2 rounded-full shadow-lg hover:rotate-12 transition-transform">
             🤡 CHAOS MODE
         </button>
