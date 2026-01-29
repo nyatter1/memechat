@@ -37,25 +37,38 @@ bioOptions[1].name = "Terminal Green";
 bioOptions[2].name = "Gothic Red";
 bioOptions[49].name = "Rainbow Wave";
 
+export const textColorOptions = Array.from({ length: 50 }, (_, i) => ({
+    id: `msg-text-${i + 1}`,
+    name: `Color ${i + 1}`
+}));
+
+textColorOptions[0].name = "Standard White";
+textColorOptions[1].name = "Neon Green";
+textColorOptions[2].name = "Hot Pink";
+textColorOptions[3].name = "Cyber Blue";
+textColorOptions[49].name = "Rainbow Flow";
+
 
 // --- UI BUILDER ---
 
 export function initCustomizationUI(container, user, db, currentStyles = {}) {
     container.innerHTML = '';
-    container.className = "w-full h-full flex flex-col bg-gray-900 text-white relative";
+    // Use h-full to fill the parent (customization-view) which has a fixed height in chat.html
+    container.className = "w-full h-full flex flex-col bg-gray-900 text-white relative overflow-hidden";
 
     // Styles State
     let selection = {
         background: currentStyles.background || 'bg-theme-1',
         name: currentStyles.name || 'name-fx-1',
-        bio: currentStyles.bio || 'bio-fx-1'
+        bio: currentStyles.bio || 'bio-fx-1',
+        textColor: currentStyles.textColor || 'msg-text-1'
     };
 
     // Header / Tabs
     const header = document.createElement('div');
-    header.className = "flex border-b-2 border-white bg-black";
+    header.className = "flex border-b-2 border-white bg-black shrink-0 flex-wrap"; 
     
-    const tabs = ['BACKGROUND', 'NAME_FX', 'BIO_STYLE'];
+    const tabs = ['BACKGROUND', 'NAME_FX', 'BIO_STYLE', 'TEXT_COLOR'];
     let activeTab = 'BACKGROUND';
 
     const renderTabs = () => {
@@ -69,9 +82,9 @@ export function initCustomizationUI(container, user, db, currentStyles = {}) {
         });
     };
 
-    // Content Area
+    // Content Area - FLEX GROW & SCROLL
     const contentArea = document.createElement('div');
-    contentArea.className = "flex-1 overflow-y-auto p-2 grid grid-cols-3 gap-2";
+    contentArea.className = "flex-1 overflow-y-auto p-2 grid grid-cols-3 gap-2 content-start";
 
     const renderContent = () => {
         contentArea.innerHTML = '';
@@ -81,30 +94,35 @@ export function initCustomizationUI(container, user, db, currentStyles = {}) {
         if (activeTab === 'BACKGROUND') { options = bgOptions; currentKey = 'background'; }
         if (activeTab === 'NAME_FX') { options = nameOptions; currentKey = 'name'; }
         if (activeTab === 'BIO_STYLE') { options = bioOptions; currentKey = 'bio'; }
+        if (activeTab === 'TEXT_COLOR') { options = textColorOptions; currentKey = 'textColor'; }
 
         options.forEach(opt => {
             const item = document.createElement('div');
-            item.className = `cursor-pointer border border-gray-600 p-2 text-center text-[8px] hover:border-white transition-all ${selection[currentKey] === opt.id ? 'border-yellow-400 bg-gray-800' : 'bg-black'}`;
+            item.className = `cursor-pointer border border-gray-600 p-2 text-center text-[8px] hover:border-white transition-all h-20 flex flex-col items-center justify-center ${selection[currentKey] === opt.id ? 'border-yellow-400 bg-gray-800' : 'bg-black'}`;
             
             // Preview Logic inside the button
             if (activeTab === 'BACKGROUND') {
-                item.classList.add(opt.id); // Apply background class to button
-                item.style.height = "50px";
+                item.classList.add(opt.id); 
             } else if (activeTab === 'NAME_FX') {
                 const span = document.createElement('span');
                 span.className = `font-bold text-lg ${opt.id}`;
-                span.innerText = "Aa";
+                span.innerText = "Name";
                 item.appendChild(span);
+            } else if (activeTab === 'TEXT_COLOR') {
+                 const span = document.createElement('span');
+                 span.className = `font-bold text-sm ${opt.id}`;
+                 span.innerText = "Text";
+                 item.appendChild(span);
             } else {
                 const span = document.createElement('span');
                 span.className = `font-bold text-xs ${opt.id}`;
-                span.innerText = "Abc";
+                span.innerText = "Bio";
                 item.appendChild(span);
             }
 
             // Label
             const label = document.createElement('div');
-            label.className = "mt-1 truncate font-pixel text-[6px]";
+            label.className = "mt-1 truncate font-pixel text-[6px] w-full";
             label.innerText = opt.name;
             item.appendChild(label);
 
@@ -133,7 +151,7 @@ export function initCustomizationUI(container, user, db, currentStyles = {}) {
 
     // Footer (Close)
     const footer = document.createElement('div');
-    footer.className = "border-t-2 border-white p-2 flex justify-end bg-black";
+    footer.className = "border-t-2 border-white p-2 flex justify-end bg-black shrink-0";
     const closeBtn = document.createElement('button');
     closeBtn.innerText = "DONE";
     closeBtn.className = "brutal-btn px-4 py-1 text-[10px]";
