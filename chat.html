@@ -123,9 +123,22 @@
         .edit-overlay {
             transition: opacity 0.2s;
         }
+
+        /* TOAST ANIMATION */
+        @keyframes toast-in {
+            0% { transform: translateX(100%); opacity: 0; }
+            80% { transform: translateX(-10%); opacity: 1; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .chaos-toast {
+            animation: toast-in 0.4s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none w-80"></div>
 
     <!-- CONTENT WRAPPER (FULL SCREEN, NO SCALE) -->
     <div class="relative z-20 w-full h-full flex items-center justify-center p-2 md:p-4">
@@ -306,6 +319,7 @@
         const pfpOverlay = document.getElementById('pfp-overlay');
         const uploadBanner = document.getElementById('upload-banner');
         const uploadPfp = document.getElementById('upload-pfp');
+        const toastContainer = document.getElementById('toast-container');
 
         let currentUser = null;
         let currentProfileUid = null;
@@ -348,6 +362,45 @@
             osc.stop(ac.currentTime + 0.1);
         }
 
+        // --- NOTIFICATIONS (CHAOS TOAST) ---
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `chaos-toast p-4 border-4 border-white pointer-events-auto shadow-[4px_4px_0_#000] flex flex-col`;
+            
+            let bgColor = 'bg-gray-900';
+            let titleColor = 'text-white';
+            let titleText = 'SYSTEM_ALERT';
+
+            if(type === 'error') {
+                bgColor = 'bg-red-700';
+                titleText = 'CRITICAL_FAILURE';
+                titleColor = 'text-yellow-300';
+            } else if (type === 'success') {
+                bgColor = 'bg-green-700';
+                titleText = 'SUCCESS_ACHIEVED';
+            }
+
+            toast.classList.add(bgColor);
+            
+            toast.innerHTML = `
+                <div class="font-pixel text-[10px] ${titleColor} mb-1 border-b-2 border-white/30 pb-1 flex justify-between">
+                    <span>${titleText}</span>
+                    <span class="cursor-pointer hover:text-white text-white/50" onclick="this.parentElement.parentElement.remove()">[X]</span>
+                </div>
+                <div class="font-bold text-xs text-white">${message}</div>
+            `;
+
+            toastContainer.appendChild(toast);
+            beep(type === 'error' ? 80 : 400);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
         // --- LISTEN FOR MY PFP CHANGES ---
         function listenToMyProfile() {
             onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
@@ -375,22 +428,28 @@
                  feed.appendChild(sysDiv);
 
                  activeUsersMap.clear();
-                 // Note: We don't add "me" here, we add it explicitly in updateOnlineList to use latest PFP
 
                 for (const docSnap of snapshot.docs) {
                     const data = docSnap.data();
                     const isSelf = data.uid === currentUser.uid;
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
                     
-                    if(data.uid && data.displayName && !activeUsersMap.has(data.uid)) {
-                        activeUsersMap.set(data.uid, { name: data.displayName });
+                    // Populate online list map from message data
+                    if(data.uid && data.displayName) {
+                        // If user not in map OR we found a message with a PFP and the map entry has none, update it
+                        if (!activeUsersMap.has(data.uid) || (data.pfpURL && !activeUsersMap.get(data.uid).pfp)) {
+                            activeUsersMap.set(data.uid, { name: data.displayName, pfp: data.pfpURL });
+                        }
                     }
 
                     const msgDiv = document.createElement('div');
                     msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
                     
+                    // PFP: Use data.pfpURL from message if available, else default
+                    const pfpSrc = data.pfpURL || DEFAULT_AVATAR;
+                    
                     // Add click handler to avatar
-                    const avatarHTML = `<img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
+                    const avatarHTML = `<img src="${pfpSrc}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
 
                     msgDiv.innerHTML = `
                         ${avatarHTML}
@@ -421,12 +480,13 @@
 
         function updateOnlineList() {
             onlineList.innerHTML = '';
-            // Render YOU first with LIVE PFP
+            // Render YOU first with LIVE PFP (local state)
             renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
             
+            // Render others from the map built from messages
             activeUsersMap.forEach((u, uid) => {
                 if (uid !== currentUser.uid) {
-                    renderUserItem(uid, u.name, false, DEFAULT_AVATAR);
+                    renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
                 }
             });
         }
@@ -458,11 +518,12 @@
                     text: text,
                     uid: currentUser.uid,
                     displayName: currentUser.displayName || 'Anon',
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    pfpURL: currentUserPfp // Bake PFP into message for history consistency
                 });
             } catch (e) {
                 console.error("Error sending message: ", e);
-                alert("MESSAGE LOST IN VOID");
+                showToast("MESSAGE LOST IN VOID", "error");
             }
         }
 
@@ -537,7 +598,7 @@
                 }
             } catch (e) {
                 console.error("Profile fetch error:", e);
-                modalBio.innerText = "Error accessing soul data.";
+                showToast("ERROR ACCESSING SOUL DATA", "error");
             }
         }
 
@@ -616,7 +677,7 @@
                 if (uploadPfp.files[0]) {
                     const file = uploadPfp.files[0];
                     if (file.size > 1024 * 1024) { // 1MB Limit
-                        alert("PFP TOO CHONKY (Max 1MB). Compress it.");
+                        showToast("PFP TOO CHONKY (Max 1MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
                     }
@@ -626,7 +687,7 @@
                 if (uploadBanner.files[0]) {
                      const file = uploadBanner.files[0];
                     if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-                        alert("BANNER TOO THICC (Max 2MB). Compress it.");
+                        showToast("BANNER TOO THICC (Max 2MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
                     }
@@ -635,15 +696,15 @@
 
                 await setDoc(doc(db, "users", currentUser.uid), newData, { merge: true });
                 beep(600);
-                // Listeners will update the UI automatically now
+                showToast("GAME SAVED", "success");
                 btnSave.innerText = "SAVE_GAME";
                 toggleEditMode(false); // Switch back to view mode
             } catch (e) {
                 // Specific error for Firestore size limit
                 if (e.message.includes("exceeds the maximum allowed size")) {
-                    alert("DATABASE REJECTED: FILE TOO FAT. TOTAL PROFILE SIZE MUST BE < 1MB.");
+                    showToast("DB REJECT: FILE TOO FAT. TOTAL < 1MB.", "error");
                 } else {
-                    alert("SAVE FAILED: " + e.message);
+                    showToast("SAVE FAILED: " + e.message, "error");
                 }
                 btnSave.innerText = "RETRY";
             }
@@ -651,7 +712,7 @@
 
         btnLike.onclick = async () => {
             if (currentProfileUid === currentUser.uid) {
-                alert("NARCISSISM DETECTED: CANNOT LIKE SELF");
+                showToast("NARCISSISM DETECTED", "error");
                 return;
             }
             
