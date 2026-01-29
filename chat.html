@@ -109,6 +109,19 @@
             background-color: #333;
             transform: translateX(-5px);
         }
+
+        /* MODAL ANIMATION */
+        #profile-modal:not(.hidden) {
+            animation: modal-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modal-pop {
+            0% { opacity: 0; transform: scale(0.9) translate(-50%, -50%); }
+            100% { opacity: 1; transform: scale(1) translate(-50%, -50%); }
+        }
+        
+        .edit-overlay {
+            transition: opacity 0.2s;
+        }
     </style>
 </head>
 <body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
@@ -166,7 +179,10 @@
                     <!-- Populated via JS -->
                 </div>
 
-                <div class="p-3 border-t-4 border-white bg-gray-900">
+                <div class="p-3 border-t-4 border-white bg-gray-900 flex flex-col gap-2">
+                    <button id="my-profile-btn" class="w-full border-2 border-white p-2 font-pixel text-[10px] bg-blue-600 hover:bg-blue-500 text-white shadow-[2px_2px_0_white] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                        MY_PROFILE
+                    </button>
                     <button id="logout-btn" class="w-full border-2 border-white p-2 font-pixel text-[10px] bg-red-600 hover:bg-red-500 text-white shadow-[2px_2px_0_white] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
                         RAGE_QUIT
                     </button>
@@ -180,10 +196,69 @@
     <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="floating-img top-10 right-10 w-24" style="animation: spin 10s linear infinite;">
     <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="floating-img bottom-40 left-10 w-32 filter grayscale contrast-200">
 
+    <!-- PROFILE MODAL (Hidden by default) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-black/80 backdrop-blur-sm pointer-events-auto">
+        <div class="bg-gray-900 border-4 border-white w-full max-w-md p-0 brutal-shadow relative mx-4">
+           <!-- Banner -->
+           <div class="h-32 bg-purple-900 relative overflow-hidden group">
+               <img id="modal-banner" class="w-full h-full object-cover opacity-80" src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif">
+               <div id="banner-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[10px]">
+                   <span>UPLOAD BANNER</span>
+                   <input type="file" id="upload-banner" class="hidden" accept="image/*">
+               </div>
+           </div>
+           
+           <!-- PFP -->
+           <div class="absolute top-20 left-4 w-24 h-24 border-4 border-white bg-black z-10 group">
+               <img id="modal-pfp" class="w-full h-full object-cover" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme">
+               <div id="pfp-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[8px]">
+                   <span>UPLOAD PFP</span>
+                   <input type="file" id="upload-pfp" class="hidden" accept="image/*">
+               </div>
+           </div>
+           
+           <!-- Content -->
+           <div class="mt-14 p-4">
+               <h2 id="modal-name" class="font-glitch text-2xl mb-1 truncate text-white" data-text="LOADING...">LOADING...</h2>
+               
+               <!-- Read Mode Info -->
+               <div id="read-mode-info">
+                    <div class="flex gap-2 text-[10px] font-pixel text-gray-400 mb-4">
+                        <span id="modal-age">LVL: ??</span> | <span id="modal-gender">CLASS: UNKNOWN</span>
+                    </div>
+                    <p id="modal-bio" class="text-sm font-bold text-pink-400 mb-4 border-l-4 border-pink-500 pl-2 min-h-[3rem] whitespace-pre-wrap">Loading bio...</p>
+               </div>
+  
+               <!-- Edit Mode Inputs (Hidden) -->
+               <div id="edit-form" class="hidden space-y-2 mb-4">
+                  <div class="flex gap-2">
+                    <input id="input-age" placeholder="AGE/LVL" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                    <input id="input-gender" placeholder="GENDER/CLASS" class="bg-black border border-white p-2 text-white text-xs w-1/2 font-pixel focus:outline-none focus:bg-gray-800">
+                  </div>
+                  <textarea id="input-bio" placeholder="WRITE YOUR LORE..." class="bg-black border border-white p-2 text-white text-xs w-full h-20 font-bold focus:outline-none focus:bg-gray-800 resize-none"></textarea>
+               </div>
+  
+               <!-- Stats & Actions -->
+               <div class="flex justify-between items-center border-t-2 border-gray-700 pt-4">
+                   <div class="flex items-center gap-2 group cursor-pointer" id="like-container">
+                       <button id="btn-like" class="text-2xl transition-transform group-hover:scale-125 group-active:scale-90 grayscale">🔥</button>
+                       <span id="modal-likes" class="font-pixel text-yellow-400 text-xs">0 SOULS</span>
+                   </div>
+                   <div class="flex gap-2">
+                       <button id="btn-edit" class="brutal-btn px-3 py-2 text-[10px] hidden hover:bg-pink-400">EDIT_DATA</button>
+                       <button id="btn-save" class="brutal-btn px-3 py-2 text-[10px] bg-green-600 hidden hover:bg-green-500">SAVE_GAME</button>
+                       <button id="btn-close" class="border-2 border-white px-3 py-2 text-[10px] hover:bg-white hover:text-black font-pixel transition-colors text-white bg-black">CLOSE</button>
+                   </div>
+               </div>
+           </div>
+        </div>
+      </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -198,21 +273,52 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         
         const feed = document.getElementById('message-feed');
         const input = document.getElementById('msg-input');
         const sendBtn = document.getElementById('send-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const onlineList = document.getElementById('online-list');
+        const myProfileBtn = document.getElementById('my-profile-btn');
+
+        // Modal Elements
+        const modal = document.getElementById('profile-modal');
+        const modalName = document.getElementById('modal-name');
+        const modalBio = document.getElementById('modal-bio');
+        const modalAge = document.getElementById('modal-age');
+        const modalGender = document.getElementById('modal-gender');
+        const modalPfp = document.getElementById('modal-pfp');
+        const modalBanner = document.getElementById('modal-banner');
+        const modalLikes = document.getElementById('modal-likes');
+        
+        const btnEdit = document.getElementById('btn-edit');
+        const btnSave = document.getElementById('btn-save');
+        const btnClose = document.getElementById('btn-close');
+        const btnLike = document.getElementById('btn-like');
+        
+        const readModeInfo = document.getElementById('read-mode-info');
+        const editForm = document.getElementById('edit-form');
+        const inputBio = document.getElementById('input-bio');
+        const inputAge = document.getElementById('input-age');
+        const inputGender = document.getElementById('input-gender');
+        
+        const bannerOverlay = document.getElementById('banner-overlay');
+        const pfpOverlay = document.getElementById('pfp-overlay');
+        const uploadBanner = document.getElementById('upload-banner');
+        const uploadPfp = document.getElementById('upload-pfp');
 
         let currentUser = null;
-        // Default Avatar for Everyone
+        let currentProfileUid = null;
+        let activeUsersMap = new Map(); // Store display names and avatars
+
+        // Default Assets
         const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
+        const DEFAULT_BANNER = "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif";
 
         // --- AUTH CHECK ---
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                // Redirect to index if not logged in
                 window.location.href = "/index";
             } else {
                 currentUser = user;
@@ -222,22 +328,20 @@
 
         // --- LOGOUT ---
         logoutBtn.addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = "/index";
-            });
+            signOut(auth).then(() => window.location.href = "/index");
         });
 
         // --- SOUNDS ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ac = new AudioContext();
-        function beep() {
+        function beep(freq = 150) {
             if(ac.state === 'suspended') ac.resume();
             const osc = ac.createOscillator();
             const g = ac.createGain();
             osc.connect(g);
             g.connect(ac.destination);
             osc.type='sawtooth';
-            osc.frequency.setValueAtTime(150, ac.currentTime);
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
             osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.1);
             osc.start();
             osc.stop(ac.currentTime + 0.1);
@@ -246,38 +350,40 @@
         // --- CHAT LOGIC ---
         function initChat() {
             const q = query(collection(db, "messages"), orderBy("createdAt"), limit(50));
-            
             let isFirstLoad = true;
 
-            onSnapshot(q, (snapshot) => {
+            onSnapshot(q, async (snapshot) => {
                 feed.innerHTML = ''; 
                 
-                // Add System Welcome
                  const sysDiv = document.createElement('div');
                  sysDiv.className = "text-center my-2";
                  sysDiv.innerHTML = `<span class="bg-yellow-400 text-black px-3 py-1 font-pixel text-[10px] border-2 border-white inline-block transform -rotate-1">SYSTEM: WELCOME ${currentUser.displayName ? currentUser.displayName.toUpperCase() : 'ANON'}</span>`;
                  feed.appendChild(sysDiv);
 
-                 // Collect unique users for "Online" list (Simple Activity Tracking)
-                 const activeUsers = new Map();
-                 activeUsers.set(currentUser.uid, { name: currentUser.displayName || 'You', isSelf: true });
+                 activeUsersMap.clear();
+                 activeUsersMap.set(currentUser.uid, { name: currentUser.displayName || 'You', pfp: null }); // Will fetch real PFP lazily if needed
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                // We need to fetch avatars for messages. This is heavy if done per message.
+                // For "Chaos" speed, we'll assume defaults unless we have a cache or fetch profile on click.
+                // To keep it simple: Messages show defaults or cached. We'll fetch updated user data for the sidebar.
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
                     const isSelf = data.uid === currentUser.uid;
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
                     
-                    if(data.uid && data.displayName) {
-                        if(!activeUsers.has(data.uid)) {
-                            activeUsers.set(data.uid, { name: data.displayName, isSelf: false });
-                        }
+                    if(data.uid && data.displayName && !activeUsersMap.has(data.uid)) {
+                        activeUsersMap.set(data.uid, { name: data.displayName });
                     }
 
                     const msgDiv = document.createElement('div');
                     msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
                     
+                    // Add click handler to avatar
+                    const avatarHTML = `<img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover cursor-pointer hover:border-pink-500 transition-colors ${isSelf ? 'grayscale' : ''}" onclick="window.openProfile('${data.uid}')">`;
+
                     msgDiv.innerHTML = `
-                        <img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-gray-800 object-cover ${isSelf ? 'grayscale' : ''}">
+                        ${avatarHTML}
                         <div class="flex flex-col ${isSelf ? 'items-end' : ''} max-w-[85%]">
                             <span class="font-bold ${isSelf ? 'text-yellow-300' : 'text-pink-400'} text-xs mb-1">
                                 ${isSelf ? 'YOU' : (data.displayName || 'ANON')} 
@@ -289,40 +395,36 @@
                         </div>
                     `;
                     feed.appendChild(msgDiv);
-                });
+                }
                 
                 feed.scrollTop = feed.scrollHeight;
-                updateOnlineList(activeUsers);
+                updateOnlineList();
 
-                // Sound Effect Logic: Only beep on updates (new messages), not first load
                 if (!isFirstLoad) {
                     snapshot.docChanges().forEach((change) => {
-                        if (change.type === "added") {
-                            beep();
-                        }
+                        if (change.type === "added") beep();
                     });
                 }
                 isFirstLoad = false;
             });
         }
 
-        function updateOnlineList(usersMap) {
+        function updateOnlineList() {
             onlineList.innerHTML = '';
-            
             // Render YOU first
-            const me = usersMap.get(currentUser.uid);
-            renderUserItem(me.name, true);
+            renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true);
             
-            usersMap.forEach((u, uid) => {
+            activeUsersMap.forEach((u, uid) => {
                 if (uid !== currentUser.uid) {
-                    renderUserItem(u.name, false);
+                    renderUserItem(uid, u.name, false);
                 }
             });
         }
 
-        function renderUserItem(name, isSelf) {
+        function renderUserItem(uid, name, isSelf) {
             const div = document.createElement('div');
             div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform";
+            div.onclick = () => openProfile(uid);
             div.innerHTML = `
                 <div class="relative">
                     <img src="${DEFAULT_AVATAR}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover">
@@ -366,7 +468,191 @@
             return div.innerHTML;
         }
 
-        // --- RANDOM GLITCH FX ---
+        // --- PROFILE LOGIC ---
+        
+        // Expose to window for inline onclicks
+        window.openProfile = openProfile;
+
+        async function openProfile(uid) {
+            currentProfileUid = uid;
+            modal.classList.remove('hidden');
+            beep(300);
+
+            // Reset UI
+            modalName.innerText = "LOADING...";
+            modalBio.innerText = "...";
+            modalAge.innerText = "LVL: ??";
+            modalGender.innerText = "CLASS: ???";
+            modalPfp.src = DEFAULT_AVATAR;
+            modalBanner.src = DEFAULT_BANNER;
+            modalLikes.innerText = "0 SOULS";
+            btnLike.classList.add('grayscale');
+
+            // Setup View/Edit Mode
+            const isMe = (uid === currentUser.uid);
+            if (isMe) {
+                btnEdit.classList.remove('hidden');
+                btnSave.classList.add('hidden');
+            } else {
+                btnEdit.classList.add('hidden');
+                btnSave.classList.add('hidden');
+            }
+            
+            // Default to Read Mode
+            toggleEditMode(false);
+
+            // Fetch Data
+            try {
+                const docRef = doc(db, "users", uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    modalName.innerText = (data.displayName || "ANON").toUpperCase();
+                    modalBio.innerText = data.bio || "No lore available.";
+                    modalAge.innerText = `LVL: ${data.age || '0'}`;
+                    modalGender.innerText = `CLASS: ${data.gender || 'NPC'}`;
+                    if(data.pfpURL) modalPfp.src = data.pfpURL;
+                    if(data.bannerURL) modalBanner.src = data.bannerURL;
+                    
+                    const likes = data.likedBy ? data.likedBy.length : 0;
+                    modalLikes.innerText = `${likes} SOUL${likes !== 1 ? 'S' : ''}`;
+                    
+                    if (data.likedBy && data.likedBy.includes(currentUser.uid)) {
+                        btnLike.classList.remove('grayscale');
+                    }
+                } else {
+                    // Fallback for new users
+                    modalName.innerText = activeUsersMap.get(uid)?.name?.toUpperCase() || "ANON";
+                }
+            } catch (e) {
+                console.error("Profile fetch error:", e);
+                modalBio.innerText = "Error accessing soul data.";
+            }
+        }
+
+        function toggleEditMode(isEdit) {
+            if (isEdit) {
+                readModeInfo.classList.add('hidden');
+                editForm.classList.remove('hidden');
+                btnEdit.classList.add('hidden');
+                btnSave.classList.remove('hidden');
+                
+                // Pre-fill inputs
+                inputBio.value = modalBio.innerText === "No lore available." ? "" : modalBio.innerText;
+                inputAge.value = modalAge.innerText.replace("LVL: ", "");
+                inputGender.value = modalGender.innerText.replace("CLASS: ", "");
+                
+                // Show Overlays
+                bannerOverlay.classList.remove('hidden');
+                bannerOverlay.classList.add('flex');
+                pfpOverlay.classList.remove('hidden');
+                pfpOverlay.classList.add('flex');
+            } else {
+                readModeInfo.classList.remove('hidden');
+                editForm.classList.add('hidden');
+                if (currentProfileUid === currentUser.uid) btnEdit.classList.remove('hidden');
+                btnSave.classList.add('hidden');
+                
+                // Hide Overlays
+                bannerOverlay.classList.add('hidden');
+                bannerOverlay.classList.remove('flex');
+                pfpOverlay.classList.add('hidden');
+                pfpOverlay.classList.remove('flex');
+            }
+        }
+
+        // Button Handlers
+        btnClose.onclick = () => modal.classList.add('hidden');
+        btnEdit.onclick = () => toggleEditMode(true);
+        myProfileBtn.onclick = () => openProfile(currentUser.uid);
+
+        btnSave.onclick = async () => {
+            if (!currentProfileUid) return;
+            btnSave.innerText = "SAVING...";
+            
+            const newData = {
+                bio: inputBio.value,
+                age: inputAge.value,
+                gender: inputGender.value,
+                displayName: currentUser.displayName
+            };
+
+            try {
+                // Upload Images if changed
+                if (uploadPfp.files[0]) {
+                    const refPfp = ref(storage, `profiles/${currentUser.uid}/pfp`);
+                    await uploadBytes(refPfp, uploadPfp.files[0]);
+                    newData.pfpURL = await getDownloadURL(refPfp);
+                }
+                if (uploadBanner.files[0]) {
+                    const refBanner = ref(storage, `profiles/${currentUser.uid}/banner`);
+                    await uploadBytes(refBanner, uploadBanner.files[0]);
+                    newData.bannerURL = await getDownloadURL(refBanner);
+                }
+
+                await setDoc(doc(db, "users", currentUser.uid), newData, { merge: true });
+                beep(600);
+                openProfile(currentUser.uid); // Refresh
+                btnSave.innerText = "SAVE_GAME";
+            } catch (e) {
+                alert("SAVE FAILED: " + e.message);
+                btnSave.innerText = "RETRY";
+            }
+        };
+
+        btnLike.onclick = async () => {
+            if (currentProfileUid === currentUser.uid) {
+                alert("NARCISSISM DETECTED: CANNOT LIKE SELF");
+                return;
+            }
+            
+            const ref = doc(db, "users", currentProfileUid);
+            // Optimistic update
+            const isLiked = !btnLike.classList.contains('grayscale');
+            if (isLiked) {
+                btnLike.classList.add('grayscale');
+                await updateDoc(ref, { likedBy: arrayRemove(currentUser.uid) });
+            } else {
+                btnLike.classList.remove('grayscale');
+                // Ensure doc exists before updating
+                const snap = await getDoc(ref);
+                if(!snap.exists()) {
+                    await setDoc(ref, { likedBy: [currentUser.uid] }, { merge: true });
+                } else {
+                    await updateDoc(ref, { likedBy: arrayUnion(currentUser.uid) });
+                }
+                
+                // Animate Flame
+                const flame = document.createElement('div');
+                flame.innerText = "🔥";
+                flame.style.position = "fixed";
+                flame.style.left = event.clientX + "px";
+                flame.style.top = event.clientY + "px";
+                flame.style.fontSize = "2rem";
+                flame.style.pointerEvents = "none";
+                document.body.appendChild(flame);
+                anime({
+                    targets: flame,
+                    translateY: -100,
+                    opacity: 0,
+                    duration: 1000,
+                    easing: 'easeOutExpo',
+                    complete: () => flame.remove()
+                });
+                beep(800);
+            }
+            // Refresh stats
+            const updatedSnap = await getDoc(ref);
+            const count = updatedSnap.data().likedBy ? updatedSnap.data().likedBy.length : 0;
+            modalLikes.innerText = `${count} SOUL${count!==1?'S':''}`;
+        };
+
+        // File Input Triggers
+        bannerOverlay.onclick = () => uploadBanner.click();
+        pfpOverlay.onclick = () => uploadPfp.click();
+
+        // --- GLITCH BACKGROUND FX ---
         setInterval(() => {
             const bubbles = document.querySelectorAll('.message-bubble');
             if (bubbles.length > 0) {
