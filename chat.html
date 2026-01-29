@@ -60,7 +60,6 @@
         }
 
         /* Specific Chat Styles */
-        /* REMOVED BUBBLE STYLING AS REQUESTED */
         .message-bubble {
             padding: 2px 0;
             background: transparent;
@@ -69,7 +68,6 @@
             width: 100%;
         }
         
-        /* Force left align always */
         .message-container {
             display: flex;
             gap: 12px;
@@ -119,16 +117,6 @@
         @keyframes modal-pop {
             0% { opacity: 0; transform: scale(0.9) translate(-50%, -50%); }
             100% { opacity: 1; transform: scale(1) translate(-50%, -50%); }
-        }
-        
-        /* MODAL EXPANSION */
-        #modal-content-container {
-            transition: max-width 0.3s, height 0.3s;
-        }
-        #modal-content-container.modal-expanded {
-            max-width: 64rem !important; /* max-w-4xl */
-            width: 95vw;
-            height: 80vh;
         }
         
         .edit-overlay {
@@ -397,6 +385,58 @@
         @keyframes hue-spin { 100% {filter: hue-rotate(360deg)} }
         .name-fx-50 { display: inline-block; transform: rotate(5deg); border: 1px solid white; padding: 1px; background: red; color: white; }
 
+        /* --- BIO STYLES --- */
+        .bio-fx-1 { font-family: sans-serif; }
+        .bio-fx-2 { font-family: 'Press Start 2P'; font-size: 0.8em; line-height: 1.5; }
+        .bio-fx-3 { font-family: 'Comic Neue'; font-weight: bold; }
+        .bio-fx-4 { font-family: monospace; color: #00ff00; }
+        .bio-fx-5 { font-family: serif; font-style: italic; color: #ffaaff; }
+        .bio-fx-6 { color: #888; }
+        .bio-fx-7 { color: #fff; text-align: center; }
+        .bio-fx-8 { color: #ff00ff; text-align: right; }
+        .bio-fx-9 { border-left: 2px solid white; padding-left: 5px; }
+        .bio-fx-10 { border-right: 2px solid red; padding-right: 5px; text-align: right; }
+        .bio-fx-11 { background: #111; padding: 5px; border: 1px solid #333; }
+        .bio-fx-12 { background: #222; color: #00ff00; padding: 5px; font-family: monospace; }
+        .bio-fx-13 { text-shadow: 1px 1px 0 #000; }
+        .bio-fx-14 { text-shadow: 0 0 5px #ff00ff; }
+        .bio-fx-15 { letter-spacing: 1px; }
+        .bio-fx-16 { font-family: 'Rubik Glitch'; }
+        .bio-fx-17 { font-family: 'Creepster'; color: #aa0000; }
+        .bio-fx-18 { font-family: 'VT323'; font-size: 1.2em; }
+        .bio-fx-19 { font-family: 'Orbitron'; font-size: 0.8em; color: #00ffff; }
+        .bio-fx-20 { font-family: 'Rye'; }
+        .bio-fx-21 { text-decoration: underline; }
+        .bio-fx-22 { text-decoration: line-through; }
+        .bio-fx-23 { background: linear-gradient(to right, #000, #222); padding: 5px; }
+        .bio-fx-24 { border: 1px dashed #555; padding: 5px; }
+        .bio-fx-25 { color: yellow; }
+        .bio-fx-26 { color: cyan; }
+        .bio-fx-27 { color: magenta; }
+        .bio-fx-28 { transform: rotate(1deg); }
+        .bio-fx-29 { transform: rotate(-1deg); }
+        .bio-fx-30 { font-weight: 100; }
+        .bio-fx-31 { font-weight: 900; }
+        .bio-fx-32 { color: transparent; -webkit-text-stroke: 0.5px white; }
+        .bio-fx-33 { background: rgba(255,255,255,0.1); padding: 5px; }
+        .bio-fx-34 { background: rgba(255,0,0,0.1); padding: 5px; border: 1px solid red; }
+        .bio-fx-35 { background: rgba(0,255,0,0.1); padding: 5px; border: 1px solid green; }
+        .bio-fx-36 { background: rgba(0,0,255,0.1); padding: 5px; border: 1px solid blue; }
+        .bio-fx-37 { border-top: 1px solid white; border-bottom: 1px solid white; padding: 5px 0; }
+        .bio-fx-38 { font-variant: small-caps; }
+        .bio-fx-39 { word-spacing: 5px; }
+        .bio-fx-40 { opacity: 0.5; transition: opacity 0.2s; } .bio-fx-40:hover { opacity: 1; }
+        .bio-fx-41 { animation: pulse-name 2s infinite; }
+        .bio-fx-42 { animation: rainbow-text 5s infinite; }
+        .bio-fx-43 { animation: glitch-anim 5s infinite; }
+        .bio-fx-44 { background: repeating-linear-gradient(45deg, #000, #000 5px, #111 5px, #111 10px); padding: 5px; }
+        .bio-fx-45 { border-radius: 10px; border: 1px solid white; padding: 5px; }
+        .bio-fx-46 { box-shadow: 5px 5px 0 #333; background: #000; padding: 5px; border: 1px solid #555; }
+        .bio-fx-47 { filter: blur(0.3px); }
+        .bio-fx-48 { color: #fff; background: #000; mix-blend-mode: difference; }
+        .bio-fx-49 { background: linear-gradient(90deg, red, blue); -webkit-background-clip: text; color: transparent; }
+        .bio-fx-50 { font-family: 'Wingdings'; } /* Chaos option */
+
         /* --- TEXT COLOR OPTIONS --- */
         .msg-text-1 { color: #ffffff; }
         .msg-text-2 { color: #00ff00; }
@@ -596,11 +636,13 @@
 
     <!-- PROFILE MODAL (Hidden by default) -->
     <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-black/80 backdrop-blur-sm pointer-events-auto">
-        <div id="modal-content-container" class="bg-gray-900 border-4 border-white w-full max-w-md p-0 brutal-shadow relative mx-4">
-           <!-- Normal Profile Content -->
-           <div id="profile-view">
+        <!-- MODAL CONTAINER: Responsive Flex Layout (Col on mobile, Row on desktop when customized) -->
+        <div id="modal-content-container" class="bg-gray-900 border-4 border-white w-full max-w-md transition-all duration-300 flex flex-col md:flex-row overflow-hidden brutal-shadow relative mx-4 max-h-[90vh]">
+           
+           <!-- LEFT SIDE: Normal Profile Content (Preview) -->
+           <div id="profile-view" class="w-full md:w-full flex-shrink-0 flex flex-col relative transition-all duration-300 overflow-y-auto">
                <!-- Banner -->
-               <div class="h-32 bg-purple-900 relative overflow-hidden group">
+               <div class="h-32 bg-purple-900 relative overflow-hidden group flex-shrink-0">
                    <img id="modal-banner" class="w-full h-full object-cover opacity-80" src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif">
                    <div id="banner-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[10px]">
                        <span>UPLOAD BANNER (Max 2MB)</span>
@@ -618,7 +660,7 @@
                </div>
                
                <!-- Content -->
-               <div class="mt-14 p-4">
+               <div class="mt-14 p-4 flex-grow">
                    <h2 id="modal-name" class="font-glitch text-2xl mb-1 truncate text-white" data-text="LOADING...">LOADING...</h2>
                    
                    <!-- Read Mode Info -->
@@ -642,7 +684,7 @@
                    </div>
       
                    <!-- Stats & Actions -->
-                   <div class="flex justify-between items-center border-t-2 border-gray-700 pt-4 flex-wrap gap-2">
+                   <div class="flex justify-between items-center border-t-2 border-gray-700 pt-4 flex-wrap gap-2 mb-4">
                        <div class="flex items-center gap-2 group cursor-pointer" id="like-container">
                            <button id="btn-like" class="text-2xl transition-transform group-hover:scale-125 group-active:scale-90 grayscale">🔥</button>
                            <span id="modal-likes" class="font-pixel text-yellow-400 text-xs">0 SOULS</span>
@@ -658,8 +700,11 @@
                </div>
            </div>
            
-           <!-- Customization Container (Injected via JS) -->
-           <div id="customization-view" class="h-full flex-col hidden"></div>
+           <!-- RIGHT SIDE: Customization Container (Injected via JS) -->
+           <!-- Hidden by default, appears side-by-side when customizing -->
+           <div id="customization-view" class="hidden flex-1 flex flex-col bg-gray-900 h-full overflow-hidden border-t-4 md:border-t-0 md:border-l-4 border-white min-w-[300px] md:w-[400px]">
+                <!-- Dynamic content injected here -->
+           </div>
         </div>
       </div>
 
@@ -1709,16 +1754,21 @@
             currentProfileUid = uid;
             modal.classList.remove('hidden');
             
-            // Remove expanded state by default
-            modalContainer.classList.remove('modal-expanded');
+            // RESET LAYOUT TO DEFAULT (NARROW)
+            modalContainer.classList.remove('max-w-5xl');
+            modalContainer.classList.add('max-w-md');
             
-            beep(300);
+            // RESET VIEWS
+            // Ensure preview is visible and takes full width initially
+            profileView.classList.remove('hidden', 'w-80', 'border-r-4');
+            profileView.classList.add('w-full');
             
-            // Reset Views
-            profileView.classList.remove('hidden');
+            // Hide Customization
             customizationView.classList.add('hidden');
             customizationView.innerHTML = ''; // Clear old instance
 
+            beep(300);
+            
             // Clear previous styles from modal container
             applyProfileStyles(modalContainer, { background: '', name: '', bio: '' });
 
@@ -1783,9 +1833,17 @@
                     // Setup Customize Button Logic (Only if it's me)
                     if (isMe) {
                         btnCustomize.onclick = () => {
-                            profileView.classList.add('hidden');
+                            // SWITCH TO SPLIT SCREEN LAYOUT
+                            modalContainer.classList.remove('max-w-md');
+                            modalContainer.classList.add('max-w-5xl');
+                            
+                            // Adjust Left Panel (Preview) to be side-by-side
+                            profileView.classList.remove('w-full');
+                            profileView.classList.add('w-full', 'md:w-96', 'border-b-4', 'md:border-b-0', 'md:border-r-4');
+                            
+                            // Show Right Panel
                             customizationView.classList.remove('hidden');
-                            modalContainer.classList.add('modal-expanded'); // Expand modal size
+                            
                             initCustomizationUI(customizationView, currentUser, db, data.profileStyles || {});
                         };
                     }
