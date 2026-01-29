@@ -649,7 +649,7 @@
            </div>
            
            <!-- Customization Container (Injected via JS) -->
-           <div id="customization-view" class="h-[500px] hidden"></div>
+           <div id="customization-view" class="h-[400px] flex flex-col hidden"></div>
         </div>
       </div>
 
@@ -748,9 +748,11 @@
         // Updated Map to store full user data including styles
         let activeUsersMap = new Map(); // Store display names, avatars, styles
         let currentUserPfp = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme"; // Track local user PFP
-        
+        let myProfileStyles = {}; // Cache local styles
+
         let myFriends = new Set();
         let myBlocked = new Set();
+        let chatInitialized = false; // Prevent double init
 
         let notifications = [];
         let unreadCount = 0;
@@ -777,12 +779,15 @@
                 window.location.href = "/index";
             } else {
                 currentUser = user;
-                initChat();
-                listenToMyProfile();
-                listenForRemoteNotifications();
-                initPMSystem(); // Initialize PM listeners
-                listenToFriendsAndBlocked();
-                listenToFriendRequests();
+                if(!chatInitialized) {
+                    chatInitialized = true;
+                    initChat();
+                    listenToMyProfile();
+                    listenForRemoteNotifications();
+                    initPMSystem(); // Initialize PM listeners
+                    listenToFriendsAndBlocked();
+                    listenToFriendRequests();
+                }
             }
         });
 
@@ -1470,10 +1475,9 @@
             onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (data.pfpURL) {
-                        currentUserPfp = data.pfpURL;
-                        updateOnlineList();
-                    }
+                    if (data.pfpURL) currentUserPfp = data.pfpURL;
+                    if (data.profileStyles) myProfileStyles = data.profileStyles; // Cache local styles
+                    updateOnlineList();
                 }
             });
         }
@@ -1503,17 +1507,9 @@
                          activeUsersMap.set(data.uid, { 
                              name: data.displayName, 
                              pfp: data.pfpURL,
-                             profileStyles: data.profileStyles // This might be undefined on old messages, handled in render
+                             profileStyles: data.profileStyles 
                          });
                     }
-                    
-                    // --- We also need to fetch user doc to get latest styles for messages if we want live style updates
-                    // But for efficiency we just rely on data snapshots in Online List or profile view.
-                    // To keep "Players Online" styled, we need to ensure updateOnlineList uses the style data.
-                    // The "messages" collection doesn't have profileStyles. 
-                    // To get styles for "Online List", we need a separate listener on "users" or rely on cached data.
-                    // The existing code has a loop for activeUsersMap based on messages. 
-                    // We'll leave message history unstyled (keeps it cleaner) and only style Online List & Profile Modal.
                     
                     const msgDiv = document.createElement('div');
                     msgDiv.className = isSelf ? "flex gap-3 items-start flex-row-reverse" : "flex gap-3 items-start";
@@ -1578,8 +1574,6 @@
         };
 
         // Fetch all users to get styles for the Online List
-        // The message listener only gets people who spoke. We want to style them correctly.
-        // We'll listen to the "users" collection for real-time style updates on the online list.
         function updateOnlineListStylesListener() {
             onSnapshot(collection(db, "users"), (snapshot) => {
                 snapshot.forEach(doc => {
@@ -1600,11 +1594,9 @@
 
         function updateOnlineList() {
             onlineList.innerHTML = '';
-            // Get my styles first
-            getDoc(doc(db, "users", currentUser.uid)).then(d => {
-                const myStyles = d.data()?.profileStyles;
-                renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp, myStyles);
-            });
+            
+            // Render Me Synchronously using cached variable
+            renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp, myProfileStyles);
 
             activeUsersMap.forEach((u, uid) => {
                 if (uid !== currentUser.uid) {
