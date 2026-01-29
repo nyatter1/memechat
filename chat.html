@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEME CHAT 9000 // THE VOID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Press+Start+2P&family=Rubik+Glitch&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        /* SHARED CHAOS STYLES */
+        body {
+            font-family: 'Comic Neue', 'Comic Sans MS', sans-serif;
+            overflow: hidden; /* Main chat shouldn't scroll body */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white"><text y="20" font-size="20">🖕</text></svg>'), auto;
+        }
+
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        .font-glitch { font-family: 'Rubik Glitch', system-ui; }
+
+        @keyframes rainbow-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-chaos {
+            background: linear-gradient(-45deg, #000000, #1a0b2e, #0f0f29, #001a1a, #26001b, #1a0000, #000000);
+            background-size: 400% 400%;
+            animation: rainbow-bg 20s ease infinite;
+        }
+
+        /* Glitch Text */
+        .glitch-text { position: relative; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a;
+        }
+        .glitch-text::before {
+            left: 2px; text-shadow: -1px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px; text-shadow: -1px 0 #00fff9;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 30px, 0); }
+            20% { clip: rect(80px, 9999px, 100px, 0); }
+            100% { clip: rect(90px, 9999px, 50px, 0); }
+        }
+        @keyframes glitch-anim2 {
+            0% { clip: rect(60px, 9999px, 10px, 0); }
+            100% { clip: rect(70px, 9999px, 100px, 0); }
+        }
+
+        /* Specific Chat Styles */
+        .sidebar {
+            width: 280px;
+            border-right: 4px solid white;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .message-bubble {
+            border: 3px solid white;
+            box-shadow: 6px 6px 0px #ff00ff;
+            transition: transform 0.1s;
+        }
+        .message-bubble:hover {
+            transform: scale(1.02);
+            box-shadow: 4px 4px 0px #00ffff;
+        }
+        .message-self {
+            border-color: #ffff00;
+            box-shadow: 6px 6px 0px #ffffff;
+            align-self: flex-end;
+            background: #222;
+        }
+
+        .brutal-btn {
+            border: 3px solid white;
+            box-shadow: 4px 4px 0px #000;
+            background: #ff00ff;
+            color: white;
+            font-family: 'Press Start 2P';
+            transition: all 0.1s;
+        }
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; border-left: 2px solid white; }
+        ::-webkit-scrollbar-thumb { background: #ff00c8; border: 2px solid white; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffffff; }
+
+        .floating-img {
+            position: absolute;
+            z-index: 0;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-chaos h-screen w-screen flex text-white relative">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar h-full hidden md:flex flex-col p-4 z-20 brutal-shadow">
+        <h2 class="font-glitch text-3xl mb-6 text-yellow-400" data-text="ROOMS">ROOMS</h2>
+        
+        <div class="space-y-4 mb-8 overflow-y-auto flex-1">
+            <div class="p-3 border-2 border-white bg-gray-900 hover:bg-gray-800 cursor-pointer hover:translate-x-2 transition-transform shadow-[4px_4px_0_#00ff00]">
+                <span class="text-green-400 font-bold">#</span> GENERAL_CHAOS
+            </div>
+            <div class="p-3 border-2 border-white bg-gray-900 hover:bg-gray-800 cursor-pointer hover:translate-x-2 transition-transform shadow-[4px_4px_0_#ff0000]">
+                <span class="text-red-400 font-bold">#</span> CURSED_IMAGES
+            </div>
+            <div class="p-3 border-2 border-white bg-gray-900 hover:bg-gray-800 cursor-pointer hover:translate-x-2 transition-transform shadow-[4px_4px_0_#0000ff]">
+                <span class="text-blue-400 font-bold">#</span> MEME_ECONOMY
+            </div>
+            <div class="p-3 border-2 border-white bg-gray-900 hover:bg-gray-800 cursor-pointer hover:translate-x-2 transition-transform opacity-50">
+                <span class="text-gray-400 font-bold">#</span> VOID_SCREAMING <span class="text-xs text-red-500">[LOCKED]</span>
+            </div>
+        </div>
+
+        <h2 class="font-pixel text-xs mb-4 text-pink-400">ONLINE_DEGENERATES (420)</h2>
+        <div class="flex-1 overflow-y-auto space-y-2 text-sm font-bold">
+            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-green-500 rounded-none animate-pulse"></div> xX_Slayer_Xx</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-green-500 rounded-none animate-pulse"></div> DogeFather</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-yellow-500 rounded-none animate-bounce"></div> GlitchGawd</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-red-500 rounded-none"></div> SUS_IMPOSTOR</div>
+        </div>
+
+        <button onclick="window.location.href='index.html'" class="mt-4 border-2 border-white p-2 font-pixel text-xs bg-red-600 hover:bg-red-500 text-white shadow-[3px_3px_0_white]">
+            RAGE_QUIT
+        </button>
+    </aside>
+
+    <!-- MAIN CHAT -->
+    <main class="chat-area relative z-10 flex flex-col h-full">
+        
+        <!-- TOP BAR -->
+        <header class="h-16 border-b-4 border-white bg-black flex items-center justify-between px-6 shadow-xl z-30">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-2xl">🍔</button>
+                <h1 class="font-glitch text-2xl md:text-4xl" data-text="#GENERAL_CHAOS">#GENERAL_CHAOS</h1>
+            </div>
+            <div class="font-pixel text-xs md:text-sm text-yellow-300 animate-pulse">
+                CHAOS_LEVEL: 9000%
+            </div>
+        </header>
+
+        <!-- MESSAGES FEED -->
+        <div id="message-feed" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth pb-24">
+            
+            <!-- SYSTEM MSG -->
+            <div class="text-center my-4">
+                <span class="bg-yellow-400 text-black px-4 py-1 font-pixel text-xs border-2 border-white inline-block transform -rotate-2">
+                    SYSTEM: WELCOME TO THE VOID
+                </span>
+            </div>
+
+            <!-- MSG 1 -->
+            <div class="flex gap-4 items-start">
+                <div class="w-12 h-12 border-2 border-white bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
+                    🗿
+                </div>
+                <div class="flex flex-col max-w-[80%]">
+                    <span class="font-bold text-pink-400 text-sm mb-1">DogeFather <span class="text-gray-500 text-xs">@ 3:00 AM</span></span>
+                    <div class="message-bubble bg-black p-4 text-lg relative">
+                        Did you guys see the new stonks? 🚀
+                    </div>
+                </div>
+            </div>
+
+            <!-- MSG 2 -->
+            <div class="flex gap-4 items-start flex-row-reverse">
+                <div class="w-12 h-12 border-2 border-white bg-blue-900 flex items-center justify-center text-2xl overflow-hidden">
+                    👽
+                </div>
+                <div class="flex flex-col items-end max-w-[80%]">
+                    <span class="font-bold text-yellow-300 text-sm mb-1">YOU (GOD) <span class="text-gray-500 text-xs">@ NOW</span></span>
+                    <div class="message-bubble message-self p-4 text-lg relative">
+                        Literally me rn.
+                    </div>
+                </div>
+            </div>
+
+            <!-- MSG 3 (IMAGE) -->
+            <div class="flex gap-4 items-start">
+                <div class="w-12 h-12 border-2 border-white bg-purple-800 flex items-center justify-center text-2xl overflow-hidden">
+                    🤡
+                </div>
+                <div class="flex flex-col max-w-[80%]">
+                    <span class="font-bold text-green-400 text-sm mb-1">GlitchGawd <span class="text-gray-500 text-xs">@ ETERNAL</span></span>
+                    <div class="message-bubble bg-black p-2 relative">
+                        <img src="https://media1.tenor.com/m/tZ2X8aCjK2EAAAAC/cat-cat-meme.gif" class="w-full max-w-sm border-2 border-white" alt="Meme Placeholder">
+                        <p class="mt-2 font-bold text-center">BOTTOM TEXT</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLACEHOLDER LOOP -->
+            <div class="flex gap-4 items-start">
+                <div class="w-12 h-12 border-2 border-white bg-red-800 flex items-center justify-center text-2xl overflow-hidden">
+                    👹
+                </div>
+                <div class="flex flex-col max-w-[80%]">
+                    <span class="font-bold text-red-400 text-sm mb-1">DemonLord69 <span class="text-gray-500 text-xs">@ YESTERDAY</span></span>
+                    <div class="message-bubble bg-black p-4 text-lg relative font-glitch">
+                        THE VOID IS CONSUMING MY WIFI
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- INPUT AREA -->
+        <div class="h-24 bg-black border-t-4 border-white p-4 flex items-center gap-4 z-30 brutal-shadow relative">
+            <button class="h-12 w-12 border-2 border-white bg-gray-800 text-2xl hover:bg-gray-700 active:scale-95 shadow-[4px_4px_0_#fff]">
+                📎
+            </button>
+            <input type="text" placeholder="SCREAM INTO THE VOID..." class="flex-1 h-12 bg-gray-900 border-2 border-white px-4 text-white font-bold focus:outline-none focus:bg-gray-800 focus:shadow-[inset_0_0_10px_#ff00ff] transition-all">
+            <button class="brutal-btn h-12 px-6 text-sm md:text-lg font-bold hover:bg-pink-500 active:bg-pink-700">
+                SCREAM
+            </button>
+        </div>
+
+    </main>
+
+    <!-- BACKGROUND FLOATING IMAGES (Decor) -->
+    <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="floating-img top-10 right-10 w-24" style="animation: spin 10s linear infinite;">
+    <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="floating-img bottom-40 left-10 w-32 filter grayscale contrast-200">
+
+    <script>
+        // --- AUTO SCROLL BOTTOM ---
+        const feed = document.getElementById('message-feed');
+        feed.scrollTop = feed.scrollHeight;
+
+        // --- INPUT FX ---
+        const input = document.querySelector('input');
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                const text = input.value;
+                if(!text) return;
+                
+                // Add fake message
+                const msg = document.createElement('div');
+                msg.className = "flex gap-4 items-start flex-row-reverse animate-bounce";
+                msg.innerHTML = `
+                    <div class="w-12 h-12 border-2 border-white bg-blue-900 flex items-center justify-center text-2xl overflow-hidden">👽</div>
+                    <div class="flex flex-col items-end max-w-[80%]">
+                        <span class="font-bold text-yellow-300 text-sm mb-1">YOU <span class="text-gray-500 text-xs">@ NOW</span></span>
+                        <div class="message-bubble message-self p-4 text-lg relative bg-black border-white shadow-[6px_6px_0_white]">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(msg);
+                input.value = '';
+                feed.scrollTop = feed.scrollHeight;
+                
+                // Beep
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ac = new AudioContext();
+                const osc = ac.createOscillator();
+                const g = ac.createGain();
+                osc.connect(g);
+                g.connect(ac.destination);
+                osc.type='sawtooth';
+                osc.frequency.setValueAtTime(150, ac.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.5);
+                osc.start();
+                osc.stop(ac.currentTime + 0.5);
+            }
+        });
+
+        // --- RANDOM GLITCH FX ---
+        setInterval(() => {
+            const bubbles = document.querySelectorAll('.message-bubble');
+            const target = bubbles[Math.floor(Math.random() * bubbles.length)];
+            if(target) {
+                target.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
+                setTimeout(() => target.style.transform = 'none', 100);
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>
