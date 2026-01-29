@@ -203,7 +203,7 @@
            <div class="h-32 bg-purple-900 relative overflow-hidden group">
                <img id="modal-banner" class="w-full h-full object-cover opacity-80" src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif">
                <div id="banner-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[10px]">
-                   <span>UPLOAD BANNER</span>
+                   <span>UPLOAD BANNER (Max 300KB)</span>
                    <input type="file" id="upload-banner" class="hidden" accept="image/*">
                </div>
            </div>
@@ -212,7 +212,7 @@
            <div class="absolute top-20 left-4 w-24 h-24 border-4 border-white bg-black z-10 group">
                <img id="modal-pfp" class="w-full h-full object-cover" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme">
                <div id="pfp-overlay" class="absolute inset-0 bg-black/50 hidden items-center justify-center cursor-pointer edit-overlay text-white font-pixel text-[8px]">
-                   <span>UPLOAD PFP</span>
+                   <span>UPLOAD PFP (Max 100KB)</span>
                    <input type="file" id="upload-pfp" class="hidden" accept="image/*">
                </div>
            </div>
@@ -258,7 +258,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        // REMOVED STORAGE IMPORT TO BYPASS CORS ISSUES
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -273,7 +273,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
         
         const feed = document.getElementById('message-feed');
         const input = document.getElementById('msg-input');
@@ -566,6 +565,14 @@
         btnClose.onclick = () => modal.classList.add('hidden');
         btnEdit.onclick = () => toggleEditMode(true);
         myProfileBtn.onclick = () => openProfile(currentUser.uid);
+        
+        // --- BASE64 HELPER ---
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
 
         btnSave.onclick = async () => {
             if (!currentProfileUid) return;
@@ -579,16 +586,25 @@
             };
 
             try {
-                // Upload Images if changed
+                // Upload Images via Base64 to bypass Storage CORS
                 if (uploadPfp.files[0]) {
-                    const refPfp = ref(storage, `profiles/${currentUser.uid}/pfp`);
-                    await uploadBytes(refPfp, uploadPfp.files[0]);
-                    newData.pfpURL = await getDownloadURL(refPfp);
+                    const file = uploadPfp.files[0];
+                    if (file.size > 100 * 1024) { // 100KB Limit
+                        alert("PFP TOO CHONKY (Max 100KB). Use a smaller image.");
+                        btnSave.innerText = "SAVE_GAME";
+                        return;
+                    }
+                    newData.pfpURL = await toBase64(file);
                 }
+                
                 if (uploadBanner.files[0]) {
-                    const refBanner = ref(storage, `profiles/${currentUser.uid}/banner`);
-                    await uploadBytes(refBanner, uploadBanner.files[0]);
-                    newData.bannerURL = await getDownloadURL(refBanner);
+                     const file = uploadBanner.files[0];
+                    if (file.size > 300 * 1024) { // 300KB Limit
+                        alert("BANNER TOO THICC (Max 300KB). Compress it.");
+                        btnSave.innerText = "SAVE_GAME";
+                        return;
+                    }
+                    newData.bannerURL = await toBase64(file);
                 }
 
                 await setDoc(doc(db, "users", currentUser.uid), newData, { merge: true });
