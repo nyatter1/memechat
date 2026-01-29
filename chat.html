@@ -12,7 +12,6 @@
         body {
             font-family: 'Comic Neue', 'Comic Sans MS', sans-serif;
             overflow: hidden; /* Main chat shouldn't scroll body */
-            /* Custom cursor removed as requested */
             cursor: auto;
         }
 
@@ -124,21 +123,17 @@
             transition: opacity 0.2s;
         }
 
-        /* TOAST ANIMATION */
-        @keyframes toast-in {
-            0% { transform: translateX(100%); opacity: 0; }
-            80% { transform: translateX(-10%); opacity: 1; }
-            100% { transform: translateX(0); opacity: 1; }
+        /* NOTIFICATION STYLES */
+        .notif-item {
+            animation: slideIn 0.2s ease-out;
         }
-        .chaos-toast {
-            animation: toast-in 0.4s ease-out forwards;
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
 <body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
-
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none w-80"></div>
 
     <!-- CONTENT WRAPPER (FULL SCREEN, NO SCALE) -->
     <div class="relative z-20 w-full h-full flex items-center justify-center p-2 md:p-4">
@@ -155,10 +150,31 @@
                         <button class="md:hidden text-lg">🍔</button>
                         <h1 class="font-glitch text-xl md:text-2xl" data-text="#GENERAL_CHAOS">#GENERAL_CHAOS</h1>
                     </div>
-                    <div class="font-pixel text-[10px] text-yellow-300 animate-pulse">
-                        CHAOS: 9000%
+                    
+                    <div class="flex items-center gap-4">
+                         <div class="font-pixel text-[10px] text-yellow-300 animate-pulse hidden md:block">
+                            CHAOS: 9000%
+                        </div>
+                        
+                        <!-- NOTIFICATION BELL -->
+                        <div class="relative cursor-pointer group" id="notif-btn">
+                            <span class="text-2xl group-hover:scale-110 transition-transform block">🔔</span>
+                            <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-pixel w-4 h-4 flex items-center justify-center border border-white hidden animate-bounce">0</span>
+                        </div>
                     </div>
                 </header>
+
+                <!-- NOTIFICATION PANEL (Dropdown) -->
+                <div id="notif-panel" class="absolute top-12 right-2 w-72 bg-gray-900 border-4 border-white brutal-shadow z-50 hidden flex flex-col max-h-[50vh] shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                    <div class="bg-black p-2 border-b-4 border-white flex justify-between items-center sticky top-0 z-10">
+                        <span class="font-pixel text-[10px] text-white">SYSTEM_LOGS</span>
+                        <button id="clear-notifs" class="text-[8px] bg-red-600 text-white px-2 py-1 hover:bg-red-500 font-pixel border border-white active:translate-y-1">NUKE ALL</button>
+                    </div>
+                    <div id="notif-list" class="overflow-y-auto p-2 space-y-2 flex-1">
+                        <!-- Items Injected Here -->
+                        <div class="text-center text-gray-500 font-pixel text-[8px] py-4" id="empty-msg">NO NEW DATA</div>
+                    </div>
+                </div>
 
                 <!-- MESSAGES FEED -->
                 <div id="message-feed" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth pb-20">
@@ -319,12 +335,22 @@
         const pfpOverlay = document.getElementById('pfp-overlay');
         const uploadBanner = document.getElementById('upload-banner');
         const uploadPfp = document.getElementById('upload-pfp');
-        const toastContainer = document.getElementById('toast-container');
+        
+        // Notification Elements
+        const notifBtn = document.getElementById('notif-btn');
+        const notifPanel = document.getElementById('notif-panel');
+        const notifList = document.getElementById('notif-list');
+        const notifBadge = document.getElementById('notif-badge');
+        const clearNotifsBtn = document.getElementById('clear-notifs');
+        const emptyMsg = document.getElementById('empty-msg');
 
         let currentUser = null;
         let currentProfileUid = null;
         let activeUsersMap = new Map(); // Store display names and avatars
         let currentUserPfp = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme"; // Track local user PFP
+
+        let notifications = [];
+        let unreadCount = 0;
 
         // Default Assets
         const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
@@ -362,44 +388,83 @@
             osc.stop(ac.currentTime + 0.1);
         }
 
-        // --- NOTIFICATIONS (CHAOS TOAST) ---
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `chaos-toast p-4 border-4 border-white pointer-events-auto shadow-[4px_4px_0_#000] flex flex-col`;
-            
-            let bgColor = 'bg-gray-900';
-            let titleColor = 'text-white';
-            let titleText = 'SYSTEM_ALERT';
+        // --- NOTIFICATION CENTER LOGIC ---
+        function addNotification(message, type = 'info') {
+            const notif = {
+                id: Date.now(),
+                message,
+                type,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            notifications.unshift(notif); // Add to top
+            unreadCount++;
+            updateBadge();
+            renderNotifications(); // Render even if hidden so it's ready
+            beep(type === 'error' ? 80 : 800);
+        }
 
-            if(type === 'error') {
-                bgColor = 'bg-red-700';
-                titleText = 'CRITICAL_FAILURE';
-                titleColor = 'text-yellow-300';
-            } else if (type === 'success') {
-                bgColor = 'bg-green-700';
-                titleText = 'SUCCESS_ACHIEVED';
+        function updateBadge() {
+            if (unreadCount > 0) {
+                notifBadge.classList.remove('hidden');
+                notifBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                notifBadge.classList.add('hidden');
+            }
+        }
+
+        function renderNotifications() {
+            // Keep header, clear list
+            notifList.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notifList.appendChild(emptyMsg);
+                return;
             }
 
-            toast.classList.add(bgColor);
-            
-            toast.innerHTML = `
-                <div class="font-pixel text-[10px] ${titleColor} mb-1 border-b-2 border-white/30 pb-1 flex justify-between">
-                    <span>${titleText}</span>
-                    <span class="cursor-pointer hover:text-white text-white/50" onclick="this.parentElement.parentElement.remove()">[X]</span>
-                </div>
-                <div class="font-bold text-xs text-white">${message}</div>
-            `;
+            notifications.forEach((n) => {
+                const item = document.createElement('div');
+                item.className = `notif-item p-2 border border-white mb-2 flex justify-between items-start gap-2 ${n.type === 'error' ? 'bg-red-900/50' : (n.type === 'success' ? 'bg-green-900/50' : 'bg-gray-800')}`;
+                
+                let icon = 'ℹ️';
+                if(n.type === 'error') icon = '💀';
+                if(n.type === 'success') icon = '💾';
 
-            toastContainer.appendChild(toast);
-            beep(type === 'error' ? 80 : 400);
-
-            // Auto remove
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
+                item.innerHTML = `
+                    <div class="flex gap-2">
+                        <span class="text-lg">${icon}</span>
+                        <div>
+                             <p class="text-[10px] font-bold text-white leading-tight">${n.message}</p>
+                             <p class="text-[8px] text-gray-400 font-pixel mt-1">${n.timestamp}</p>
+                        </div>
+                    </div>
+                    <button class="text-white hover:text-red-400 font-bold" onclick="window.deleteNotif(${n.id})">X</button>
+                `;
+                notifList.appendChild(item);
+            });
         }
+
+        // Toggle Panel
+        notifBtn.addEventListener('click', () => {
+            const isHidden = notifPanel.classList.contains('hidden');
+            if (isHidden) {
+                notifPanel.classList.remove('hidden');
+                unreadCount = 0; // Clear unread on open
+                updateBadge();
+            } else {
+                notifPanel.classList.add('hidden');
+            }
+        });
+
+        // Global handlers for HTML inline calls
+        window.deleteNotif = (id) => {
+            notifications = notifications.filter(n => n.id !== id);
+            renderNotifications();
+        };
+
+        clearNotifsBtn.addEventListener('click', () => {
+            notifications = [];
+            renderNotifications();
+        });
 
         // --- LISTEN FOR MY PFP CHANGES ---
         function listenToMyProfile() {
@@ -523,7 +588,7 @@
                 });
             } catch (e) {
                 console.error("Error sending message: ", e);
-                showToast("MESSAGE LOST IN VOID", "error");
+                addNotification("MESSAGE LOST IN VOID", "error");
             }
         }
 
@@ -598,7 +663,7 @@
                 }
             } catch (e) {
                 console.error("Profile fetch error:", e);
-                showToast("ERROR ACCESSING SOUL DATA", "error");
+                addNotification("ERROR ACCESSING SOUL DATA", "error");
             }
         }
 
@@ -677,7 +742,7 @@
                 if (uploadPfp.files[0]) {
                     const file = uploadPfp.files[0];
                     if (file.size > 1024 * 1024) { // 1MB Limit
-                        showToast("PFP TOO CHONKY (Max 1MB). Compress it.", "error");
+                        addNotification("PFP TOO CHONKY (Max 1MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
                     }
@@ -687,7 +752,7 @@
                 if (uploadBanner.files[0]) {
                      const file = uploadBanner.files[0];
                     if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-                        showToast("BANNER TOO THICC (Max 2MB). Compress it.", "error");
+                        addNotification("BANNER TOO THICC (Max 2MB). Compress it.", "error");
                         btnSave.innerText = "SAVE_GAME";
                         return;
                     }
@@ -696,15 +761,15 @@
 
                 await setDoc(doc(db, "users", currentUser.uid), newData, { merge: true });
                 beep(600);
-                showToast("GAME SAVED", "success");
+                addNotification("GAME SAVED", "success");
                 btnSave.innerText = "SAVE_GAME";
                 toggleEditMode(false); // Switch back to view mode
             } catch (e) {
                 // Specific error for Firestore size limit
                 if (e.message.includes("exceeds the maximum allowed size")) {
-                    showToast("DB REJECT: FILE TOO FAT. TOTAL < 1MB.", "error");
+                    addNotification("DB REJECT: FILE TOO FAT. TOTAL < 1MB.", "error");
                 } else {
-                    showToast("SAVE FAILED: " + e.message, "error");
+                    addNotification("SAVE FAILED: " + e.message, "error");
                 }
                 btnSave.innerText = "RETRY";
             }
@@ -712,7 +777,7 @@
 
         btnLike.onclick = async () => {
             if (currentProfileUid === currentUser.uid) {
-                showToast("NARCISSISM DETECTED", "error");
+                addNotification("NARCISSISM DETECTED", "error");
                 return;
             }
             
