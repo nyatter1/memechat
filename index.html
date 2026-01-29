@@ -131,19 +131,6 @@
             z-index: 50;
         }
         
-        .cat-peek {
-            position: absolute;
-            top: -60px;
-            right: 20px;
-            width: 100px;
-            transition: top 0.3s;
-            z-index: -1;
-            /* Invert filter to make cat look ghostly/dark mode fit */
-            filter: invert(1) grayscale(1);
-        }
-        .form-container:hover .cat-peek {
-            top: -90px;
-        }
     </style>
 </head>
 <body class="bg-chaos min-h-screen flex flex-col items-center justify-center overflow-hidden select-none text-white">
@@ -161,9 +148,6 @@
         <!-- MAIN CARD -->
         <div class="tilt-card relative w-full max-w-md p-2 z-20">
             
-            <!-- PEEKING CAT -->
-            <img src="https://media1.tenor.com/m/N5a92wH3wKkAAAAC/cat-stare.gif" class="cat-peek rounded-t-lg border-4 border-white bg-gray-900" alt="Peeking Cat">
-
             <div class="form-container bg-gray-900 border-8 border-white p-8 brutal-shadow relative z-10">
                 
                 <!-- TOGGLE SWITCH -->
