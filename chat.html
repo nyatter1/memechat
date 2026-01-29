@@ -150,6 +150,90 @@
             text-decoration: underline;
             cursor: pointer;
         }
+
+        /* PM WINDOW STYLES */
+        .pm-window {
+            position: absolute;
+            width: 320px;
+            height: 400px;
+            background: #111;
+            border: 4px solid #fff;
+            box-shadow: 8px 8px 0 #ff00ff;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            resize: both;
+            overflow: hidden;
+            min-width: 250px;
+            min-height: 250px;
+            top: 100px;
+            left: 100px;
+        }
+        .pm-header {
+            background: #222;
+            padding: 8px;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #fff;
+        }
+        .pm-header:active {
+            cursor: grabbing;
+            background: #444;
+        }
+        .pm-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pm-input-area {
+            border-top: 2px solid #fff;
+            padding: 8px;
+            background: #111;
+            display: flex;
+            gap: 4px;
+        }
+        
+        /* CONTEXT MENU STYLES */
+        #context-menu {
+            position: fixed;
+            background: #000;
+            border: 4px solid #fff;
+            box-shadow: 6px 6px 0 #00ffff;
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        #context-menu button {
+            padding: 12px;
+            text-align: left;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            border-bottom: 2px solid #333;
+            transition: background 0.1s;
+        }
+        #context-menu button:hover {
+            background: #ff00c8;
+            color: black;
+        }
+        #context-menu button:last-child {
+            border-bottom: none;
+        }
+
+        /* INBOX STYLES */
+        #inbox-panel {
+            box-shadow: -8px 8px 0px 0px #ffffff;
+        }
+        .inbox-item:hover {
+            background: #222;
+        }
     </style>
 </head>
 <body class="bg-chaos h-screen w-screen flex flex-col items-center justify-center text-white relative">
@@ -174,6 +258,12 @@
                          <div class="font-pixel text-[10px] text-yellow-300 animate-pulse hidden md:block">
                             CHAOS: 9000%
                         </div>
+
+                        <!-- INBOX BUTTON -->
+                        <div class="relative cursor-pointer group" id="inbox-btn">
+                            <span class="text-2xl group-hover:scale-110 transition-transform block">📩</span>
+                            <span id="inbox-dot" class="absolute -top-1 -right-1 bg-red-600 rounded-full w-3 h-3 hidden animate-ping"></span>
+                        </div>
                         
                         <!-- NOTIFICATION BELL -->
                         <div class="relative cursor-pointer group" id="notif-btn">
@@ -182,6 +272,17 @@
                         </div>
                     </div>
                 </header>
+
+                <!-- INBOX PANEL (Dropdown) -->
+                <div id="inbox-panel" class="absolute top-12 right-14 w-64 bg-black border-4 border-white z-50 hidden flex flex-col max-h-[50vh]">
+                     <div class="bg-purple-900 p-2 border-b-4 border-white text-center">
+                        <span class="font-pixel text-[10px] text-white">DIRECT_LINKS</span>
+                    </div>
+                    <div id="inbox-list" class="overflow-y-auto p-0 flex-1">
+                        <!-- Inbox items injected here -->
+                        <div class="text-center text-gray-500 font-pixel text-[8px] py-4">VOID IS EMPTY</div>
+                    </div>
+                </div>
 
                 <!-- NOTIFICATION PANEL (Dropdown) -->
                 <div id="notif-panel" class="absolute top-12 right-2 w-72 bg-gray-900 border-4 border-white brutal-shadow z-50 hidden flex flex-col max-h-[50vh] shadow-[0_0_20px_rgba(0,0,0,0.8)]">
@@ -241,6 +342,16 @@
 
         </div>
     </div>
+
+    <!-- CONTEXT MENU -->
+    <div id="context-menu">
+        <button id="ctx-profile">VIEW PROFILE</button>
+        <button id="ctx-pm">PM USER</button>
+        <button id="ctx-action" class="hidden text-red-500">ACTION</button>
+    </div>
+
+    <!-- PM CONTAINER (For Draggable Windows) -->
+    <div id="pm-container"></div>
 
     <!-- BACKGROUND FLOATING IMAGES (Decor) -->
     <img src="https://media1.tenor.com/m/m1M773lCgYAAAAAC/doge.gif" class="floating-img top-10 right-10 w-24" style="animation: spin 10s linear infinite;">
@@ -368,6 +479,17 @@
         const notifBadge = document.getElementById('notif-badge');
         const clearNotifsBtn = document.getElementById('clear-notifs');
         const emptyMsg = document.getElementById('empty-msg');
+        
+        // Inbox & Context Menu
+        const inboxBtn = document.getElementById('inbox-btn');
+        const inboxPanel = document.getElementById('inbox-panel');
+        const inboxList = document.getElementById('inbox-list');
+        const inboxDot = document.getElementById('inbox-dot');
+        const contextMenu = document.getElementById('context-menu');
+        const ctxProfile = document.getElementById('ctx-profile');
+        const ctxPm = document.getElementById('ctx-pm');
+        const ctxAction = document.getElementById('ctx-action');
+        const pmContainer = document.getElementById('pm-container');
 
         let currentUser = null;
         let currentProfileUid = null;
@@ -377,6 +499,12 @@
         let notifications = [];
         let unreadCount = 0;
         let viewedProfilesSession = new Set(); // Prevent spamming views in one session
+        
+        // PM State
+        let selectedUserForContext = null;
+        let incomingPMs = [];
+        let activePMWindows = new Set();
+        let inboxData = new Map(); // uid -> { count, pfp, name }
 
         // Default Assets
         const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme";
@@ -391,6 +519,7 @@
                 initChat();
                 listenToMyProfile();
                 listenForRemoteNotifications();
+                initPMSystem(); // Initialize PM listeners
             }
         });
 
@@ -413,6 +542,244 @@
             osc.frequency.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.1);
             osc.start();
             osc.stop(ac.currentTime + 0.1);
+        }
+        
+        // --- PM SYSTEM ---
+        function initPMSystem() {
+            // Listener for incoming messages (to populate inbox and trigger alerts)
+            const qIncoming = query(collection(db, "private_messages"), where("receiverId", "==", currentUser.uid), limit(100));
+            onSnapshot(qIncoming, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        handleNewPM(data, true);
+                    }
+                });
+            });
+
+            // Listener for outgoing messages (to update chat windows I sent messages to)
+            const qOutgoing = query(collection(db, "private_messages"), where("senderId", "==", currentUser.uid), limit(100));
+            onSnapshot(qOutgoing, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                     if (change.type === "added") {
+                        const data = change.doc.data();
+                        handleNewPM(data, false);
+                     }
+                });
+            });
+        }
+        
+        function handleNewPM(msg, isIncoming) {
+            const partnerId = isIncoming ? msg.senderId : msg.receiverId;
+            
+            // 1. Update Inbox Data
+            // Logic: "Sender will not see contact until receiver sends back."
+            // So we only add to inbox list if we have RECEIVED a message from them (isIncoming = true).
+            // OR if they are already in the inbox (meaning they messaged us before).
+            
+            if (isIncoming) {
+                let prev = inboxData.get(partnerId) || { count: 0, name: msg.senderName, pfp: msg.pfpURL };
+                prev.count++;
+                inboxData.set(partnerId, prev);
+                
+                // Alert if inbox is closed
+                if (inboxPanel.classList.contains('hidden')) {
+                     inboxDot.classList.remove('hidden');
+                     beep(800, 'sine');
+                }
+                
+                renderInbox();
+            }
+
+            // 2. Update Open Chat Windows
+            const windowId = `pm-window-${partnerId}`;
+            const existingWin = document.getElementById(windowId);
+            if (existingWin) {
+                const content = existingWin.querySelector('.pm-messages');
+                const bubble = document.createElement('div');
+                bubble.className = `p-1 text-xs mb-1 rounded max-w-[80%] break-words ${isIncoming ? 'bg-gray-800 text-left self-start border border-gray-600' : 'bg-purple-900 text-right self-end border border-purple-500'}`;
+                bubble.innerText = msg.text;
+                content.appendChild(bubble);
+                content.scrollTop = content.scrollHeight;
+            }
+        }
+
+        // --- INBOX UI ---
+        inboxBtn.onclick = () => {
+            const isHidden = inboxPanel.classList.contains('hidden');
+            if (isHidden) {
+                inboxPanel.classList.remove('hidden');
+                inboxDot.classList.add('hidden'); // Clear alert
+                renderInbox();
+            } else {
+                inboxPanel.classList.add('hidden');
+            }
+        };
+
+        function renderInbox() {
+            inboxList.innerHTML = '';
+            if (inboxData.size === 0) {
+                 inboxList.innerHTML = '<div class="text-center text-gray-500 font-pixel text-[8px] py-4">VOID IS EMPTY</div>';
+                 return;
+            }
+
+            inboxData.forEach((data, uid) => {
+                const item = document.createElement('div');
+                item.className = 'inbox-item flex items-center gap-2 p-2 cursor-pointer border-b border-gray-800';
+                item.onclick = () => openPMWindow(uid, data.name, data.pfp);
+                
+                item.innerHTML = `
+                    <div class="relative">
+                         <img src="${data.pfp || DEFAULT_AVATAR}" class="w-8 h-8 rounded-full border border-white">
+                         <span class="absolute -top-1 -right-1 bg-blue-600 text-[8px] rounded-full w-4 h-4 flex items-center justify-center font-bold">${data.count}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-[10px] text-white">${data.name}</div>
+                        <div class="text-[8px] text-gray-500">Click to chat</div>
+                    </div>
+                `;
+                inboxList.appendChild(item);
+            });
+        }
+
+        // --- CONTEXT MENU LOGIC ---
+        document.onclick = (e) => {
+            // Hide context menu if clicking elsewhere
+            if (!contextMenu.contains(e.target) && e.target.className.indexOf('user-item') === -1) {
+                contextMenu.style.display = 'none';
+            }
+        };
+
+        function showContextMenu(e, uid, name, pfp) {
+            e.stopPropagation(); // Prevent immediate close
+            selectedUserForContext = { uid, name, pfp };
+            
+            contextMenu.style.display = 'flex';
+            contextMenu.style.top = `${e.clientY}px`;
+            contextMenu.style.left = `${e.clientX}px`;
+            
+            // Action Button Visibility (Dev only)
+            if (currentUser.email === 'dev@gmail.com') {
+                ctxAction.classList.remove('hidden');
+            } else {
+                ctxAction.classList.add('hidden');
+            }
+        }
+
+        ctxProfile.onclick = () => {
+            if(selectedUserForContext) openProfile(selectedUserForContext.uid);
+            contextMenu.style.display = 'none';
+        };
+
+        ctxPm.onclick = () => {
+            if(selectedUserForContext) openPMWindow(selectedUserForContext.uid, selectedUserForContext.name, selectedUserForContext.pfp);
+            contextMenu.style.display = 'none';
+        };
+
+        ctxAction.onclick = () => {
+            alert("ADMIN ACTION: USER PURGED FROM REALITY (jk)");
+            contextMenu.style.display = 'none';
+        };
+
+        // --- DRAGGABLE PM WINDOWS ---
+        window.openPMWindow = async (uid, name, pfp) => {
+            const winId = `pm-window-${uid}`;
+            if (document.getElementById(winId)) return; // Already open
+
+            const win = document.createElement('div');
+            win.id = winId;
+            win.className = 'pm-window';
+            
+            win.innerHTML = `
+                <div class="pm-header">
+                    <div class="flex items-center gap-2">
+                        <img src="${pfp || DEFAULT_AVATAR}" class="w-4 h-4 rounded-full">
+                        <span class="font-pixel text-[10px] text-white">${name}</span>
+                    </div>
+                    <button class="text-red-500 hover:text-white font-bold" onclick="document.getElementById('${winId}').remove()">X</button>
+                </div>
+                <div class="pm-messages flex flex-col">
+                    <!-- Chat loaded here -->
+                    <div class="text-gray-500 text-[8px] text-center mt-2">SECURE CHANNEL OPENED</div>
+                </div>
+                <div class="pm-input-area">
+                    <input type="text" class="flex-1 bg-black text-white text-[10px] p-1 border border-gray-600 focus:border-white focus:outline-none" placeholder="Whisper...">
+                    <button class="bg-white text-black text-[10px] font-bold px-2 hover:bg-gray-300">SEND</button>
+                </div>
+            `;
+            
+            pmContainer.appendChild(win);
+            makeDraggable(win, win.querySelector('.pm-header'));
+            
+            // Setup Send Logic
+            const input = win.querySelector('input');
+            const btn = win.querySelector('button:last-child');
+            
+            const sendPM = async () => {
+                const text = input.value.trim();
+                if (!text) return;
+                input.value = '';
+                
+                try {
+                    await addDoc(collection(db, "private_messages"), {
+                        senderId: currentUser.uid,
+                        senderName: currentUser.displayName,
+                        receiverId: uid,
+                        text: text,
+                        pfpURL: currentUserPfp,
+                        createdAt: serverTimestamp()
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
+            };
+            
+            btn.onclick = sendPM;
+            input.onkeydown = (e) => { if(e.key === 'Enter') sendPM(); };
+
+            // Load History (Simple Implementation: just fetch recent)
+            // Note: Our global listeners handle new messages, but we might want history.
+            // Since `onSnapshot` above handles ALL incoming/outgoing since page load, persistent history
+            // would require a separate query here. For chaos simplicity, we show session messages or messages received since load.
+            // If you want full history:
+            /* 
+            const q = query(collection(db, "private_messages"), 
+                or(
+                    and(where("senderId", "==", currentUser.uid), where("receiverId", "==", uid)),
+                    and(where("senderId", "==", uid), where("receiverId", "==", currentUser.uid))
+                ), 
+                orderBy("createdAt", "asc")
+            );
+            // This requires complex indexes. We will rely on the session listeners for now as per "chaotic" nature.
+            */
+        };
+
+        function makeDraggable(el, handle) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            handle.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                el.style.top = (el.offsetTop - pos2) + "px";
+                el.style.left = (el.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
         }
 
         // --- REMOTE NOTIFICATION LOGIC ---
@@ -654,7 +1021,10 @@
 
         function updateOnlineList() {
             onlineList.innerHTML = '';
+            // Render SELF
             renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
+            
+            // Render OTHERS
             activeUsersMap.forEach((u, uid) => {
                 if (uid !== currentUser.uid) {
                     renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
@@ -664,14 +1034,20 @@
 
         function renderUserItem(uid, name, isSelf, pfpUrl) {
             const div = document.createElement('div');
-            div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform";
-            div.onclick = () => openProfile(uid);
+            div.className = "user-item flex items-center gap-2 cursor-pointer transition-transform relative";
+            
+            // New interaction: Click to show context menu
+            div.onclick = (e) => {
+                if (isSelf) openProfile(uid);
+                else showContextMenu(e, uid, name, pfpUrl);
+            };
+
             div.innerHTML = `
-                <div class="relative">
+                <div class="relative pointer-events-none">
                     <img src="${pfpUrl}" class="w-8 h-8 border-2 border-white bg-blue-900 object-cover">
                     <div class="absolute -bottom-1 -right-1 w-2 h-2 ${isSelf ? 'bg-green-500' : 'bg-purple-500'} border border-black animate-pulse"></div>
                 </div>
-                <div>
+                <div class="pointer-events-none">
                     <p class="font-bold text-xs ${isSelf ? 'text-green-400' : 'text-purple-400'}">${name} ${isSelf ? '(YOU)' : ''}</p>
                     <p class="text-[9px] text-gray-500">Online</p>
                 </div>
