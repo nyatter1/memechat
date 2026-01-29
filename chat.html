@@ -132,6 +132,17 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
+        /* Friend Request Buttons */
+        .req-btn {
+            font-family: 'Press Start 2P';
+            font-size: 8px;
+            padding: 4px 6px;
+            cursor: pointer;
+            border: 1px solid white;
+        }
+        .req-accept { background: #00aa00; color: white; }
+        .req-decline { background: #aa0000; color: white; }
+
         /* GLOW EFFECT FOR MENTIONS */
         .glow-text {
             color: #fff;
@@ -299,8 +310,12 @@
 
                 <!-- INBOX PANEL (Dropdown) -->
                 <div id="inbox-panel" class="absolute top-12 right-14 w-64 bg-black border-4 border-white z-50 hidden flex flex-col max-h-[50vh]">
-                     <div class="bg-purple-900 p-2 border-b-4 border-white text-center">
+                     <div class="bg-purple-900 p-2 border-b-4 border-white flex justify-between items-center">
                         <span class="font-pixel text-[10px] text-white">DIRECT_LINKS</span>
+                        <div class="flex items-center gap-2">
+                             <span class="text-[8px] font-bold">FRIENDS ONLY</span>
+                             <input type="checkbox" id="inbox-filter-toggle" class="cursor-pointer">
+                        </div>
                     </div>
                     <div id="inbox-list" class="overflow-y-auto p-0 flex-1">
                         <!-- Inbox items injected here -->
@@ -377,7 +392,9 @@
     <div id="context-menu">
         <button id="ctx-profile">VIEW PROFILE</button>
         <button id="ctx-pm">PM USER</button>
-        <button id="ctx-action" class="hidden text-red-500">ACTION</button>
+        <button id="ctx-add-friend" class="text-green-400">ADD FRIEND</button>
+        <button id="ctx-block" class="text-red-500 hover:bg-red-900">BLOCK</button>
+        <button id="ctx-action" class="hidden text-red-500 border-t-2 border-red-500">ADMIN NUKE</button>
     </div>
 
     <!-- PM CONTAINER (For Draggable Windows) -->
@@ -457,7 +474,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, query, orderBy, limit, onSnapshot, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDY-nLKffz3IYCm-4TRLr-0snNZH4zclt8",
@@ -524,10 +541,15 @@
         const inboxPanel = document.getElementById('inbox-panel');
         const inboxList = document.getElementById('inbox-list');
         const inboxDot = document.getElementById('inbox-dot');
+        const inboxFilterToggle = document.getElementById('inbox-filter-toggle');
+        
         const contextMenu = document.getElementById('context-menu');
         const ctxProfile = document.getElementById('ctx-profile');
         const ctxPm = document.getElementById('ctx-pm');
+        const ctxAddFriend = document.getElementById('ctx-add-friend');
+        const ctxBlock = document.getElementById('ctx-block');
         const ctxAction = document.getElementById('ctx-action');
+        
         const pmContainer = document.getElementById('pm-container');
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightbox-img');
@@ -536,6 +558,9 @@
         let currentProfileUid = null;
         let activeUsersMap = new Map(); // Store display names and avatars
         let currentUserPfp = "https://api.dicebear.com/7.x/pixel-art/svg?seed=Meme"; // Track local user PFP
+        
+        let myFriends = new Set();
+        let myBlocked = new Set();
 
         let notifications = [];
         let unreadCount = 0;
@@ -565,6 +590,8 @@
                 listenToMyProfile();
                 listenForRemoteNotifications();
                 initPMSystem(); // Initialize PM listeners
+                listenToFriendsAndBlocked();
+                listenToFriendRequests();
             }
         });
 
@@ -596,6 +623,131 @@
             reader.onload = () => resolve(reader.result);
             reader.onerror = error => reject(error);
         });
+
+        // --- FRIENDS & BLOCKING LOGIC ---
+        function listenToFriendsAndBlocked() {
+             onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    myFriends = new Set(data.friends || []);
+                    myBlocked = new Set(data.blocked || []);
+                    
+                    updateOnlineList();
+                    renderInbox();
+                    
+                    // Refresh PM Window Request Banners
+                    document.querySelectorAll('.pm-window').forEach(win => {
+                        const uid = win.id.replace('pm-window-', '');
+                        const banner = win.querySelector('.req-banner');
+                        if (myFriends.has(uid)) {
+                            if(banner) banner.remove();
+                        } else if (!banner) {
+                            const header = win.querySelector('.pm-header');
+                            const b = document.createElement('div');
+                            b.className = "req-banner bg-yellow-600 text-[8px] p-1 text-center font-bold";
+                            b.innerText = "MESSAGE REQUEST - NOT FRIENDS";
+                            header.after(b);
+                        }
+                    });
+                }
+             });
+        }
+        
+        function listenToFriendRequests() {
+            const q = query(
+                collection(db, "friend_requests"),
+                where("to", "==", currentUser.uid),
+                where("status", "==", "pending")
+            );
+            
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        addFriendRequestNotification(change.doc.id, data.fromName, data.from);
+                    }
+                });
+            });
+        }
+
+        function addFriendRequestNotification(reqId, name, uid) {
+            const div = document.createElement('div');
+            div.className = "p-2 border border-green-500 bg-gray-900 mb-2";
+            div.innerHTML = `
+                <div class="text-[10px] text-green-400 mb-1">FRIEND REQUEST: ${name}</div>
+                <div class="flex gap-2">
+                    <button class="req-btn req-accept" onclick="window.handleFriendReq('${reqId}', '${uid}', true)">ACCEPT</button>
+                    <button class="req-btn req-decline" onclick="window.handleFriendReq('${reqId}', '${uid}', false)">DECLINE</button>
+                </div>
+            `;
+            // Add to notif list directly or via notification array
+            // Ideally we prepend to notification panel
+            if(notifList.contains(emptyMsg)) notifList.innerHTML = '';
+            notifList.prepend(div);
+            
+            beep(1000, 'square');
+            notifBadge.classList.remove('hidden');
+            notifBadge.innerText = "!";
+        }
+
+        window.handleFriendReq = async (reqId, senderUid, accepted) => {
+            const reqRef = doc(db, "friend_requests", reqId);
+            if (accepted) {
+                // Update both users friends list
+                const batch = db.batch || null; // standard SDK uses batch, here we just do parallel writes
+                
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    friends: arrayUnion(senderUid)
+                });
+                 await updateDoc(doc(db, "users", senderUid), {
+                    friends: arrayUnion(currentUser.uid)
+                });
+                await deleteDoc(reqRef);
+                addNotification(`FRIEND ADDED: ${senderUid}`, 'success');
+            } else {
+                await deleteDoc(reqRef);
+                addNotification("REQUEST DENIED", 'error');
+            }
+            // Remove the notification element
+            // In a real app we'd track the DOM element, here we just refresh notifs list or let it be
+             renderNotifications(); // This might wipe the custom HTML, but simplifies state
+        };
+        
+        // Context Menu Actions
+        ctxAddFriend.onclick = async () => {
+             if(!selectedUserForContext) return;
+             const target = selectedUserForContext.uid;
+             
+             if (myFriends.has(target)) {
+                 addNotification("ALREADY FRIENDS", "info");
+                 contextMenu.style.display = 'none';
+                 return;
+             }
+             
+             await addDoc(collection(db, "friend_requests"), {
+                 from: currentUser.uid,
+                 fromName: currentUser.displayName,
+                 to: target,
+                 status: "pending",
+                 createdAt: serverTimestamp()
+             });
+             addNotification("FRIEND REQUEST SENT", "success");
+             contextMenu.style.display = 'none';
+        };
+
+        ctxBlock.onclick = async () => {
+            if(!selectedUserForContext) return;
+            const target = selectedUserForContext.uid;
+            
+            await updateDoc(doc(db, "users", currentUser.uid), {
+                blocked: arrayUnion(target)
+            });
+            
+            addNotification("USER BLOCKED", "error");
+            contextMenu.style.display = 'none';
+            // Logic to close PMs handled by listener updates
+        };
+
 
         // --- IMAGE HANDLING ---
         window.openLightbox = (src) => {
@@ -649,6 +801,10 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
+                        
+                        // Check if I blocked this sender
+                        if (myBlocked.has(data.senderId)) return;
+                        
                         handleNewPM(data, true);
                     }
                 });
@@ -728,15 +884,23 @@
                 inboxPanel.classList.add('hidden');
             }
         };
+        
+        inboxFilterToggle.onchange = renderInbox;
 
         function renderInbox() {
             inboxList.innerHTML = '';
-            if (inboxData.size === 0) {
-                 inboxList.innerHTML = '<div class="text-center text-gray-500 font-pixel text-[8px] py-4">VOID IS EMPTY</div>';
-                 return;
-            }
-
+            
+            const friendsOnly = inboxFilterToggle.checked;
+            let hasItems = false;
+            
             inboxData.forEach((data, uid) => {
+                // Filter Blocked
+                if (myBlocked.has(uid)) return;
+                
+                // Filter Friends Only
+                if (friendsOnly && !myFriends.has(uid)) return;
+                
+                hasItems = true;
                 const item = document.createElement('div');
                 item.className = 'inbox-item flex items-center gap-2 p-2 cursor-pointer border-b border-gray-800';
                 item.onclick = () => openPMWindow(uid, data.name, data.pfp);
@@ -753,6 +917,10 @@
                 `;
                 inboxList.appendChild(item);
             });
+            
+            if (!hasItems) {
+                 inboxList.innerHTML = '<div class="text-center text-gray-500 font-pixel text-[8px] py-4">VOID IS EMPTY</div>';
+            }
         }
 
         // --- CONTEXT MENU LOGIC ---
@@ -775,6 +943,13 @@
             } else {
                 ctxAction.classList.add('hidden');
             }
+            
+            // Adjust "Add Friend" if already friends
+            if(myFriends.has(uid)) {
+                ctxAddFriend.classList.add('hidden');
+            } else {
+                ctxAddFriend.classList.remove('hidden');
+            }
         }
 
         ctxProfile.onclick = () => {
@@ -794,6 +969,11 @@
 
         // --- DRAGGABLE PM WINDOWS ---
         window.openPMWindow = async (uid, name, pfp) => {
+            if (myBlocked.has(uid)) {
+                addNotification("YOU BLOCKED THIS USER", "error");
+                return;
+            }
+            
             const winId = `pm-window-${uid}`;
             if (document.getElementById(winId)) return; 
 
@@ -801,6 +981,12 @@
             win.id = winId;
             win.className = 'pm-window';
             
+            // Check friendship
+            let bannerHTML = "";
+            if (!myFriends.has(uid)) {
+                bannerHTML = `<div class="req-banner bg-yellow-600 text-[8px] p-1 text-center font-bold">MESSAGE REQUEST - NOT FRIENDS</div>`;
+            }
+
             win.innerHTML = `
                 <div class="pm-header">
                     <div class="flex items-center gap-2">
@@ -812,6 +998,7 @@
                         <button class="text-red-500 hover:text-white font-bold ml-1" onclick="document.getElementById('${winId}').remove()">X</button>
                     </div>
                 </div>
+                ${bannerHTML}
                 <div class="pm-messages">
                     <!-- Chat loaded here -->
                     <div class="text-gray-500 text-[8px] text-center mt-2">SECURE CHANNEL OPENED</div>
@@ -965,8 +1152,25 @@
         }
 
         function renderNotifications() {
-            notifList.innerHTML = '';
-            if (notifications.length === 0) {
+            // Keep specific Friend Req notifications if they exist in DOM, or re-render everything
+            // To be safe and simple, we clear list. 
+            // NOTE: This clears the HTML Friend Request buttons if mixed with standard notifications array.
+            // A better way for this chaos app: Only render from array. 
+            // Friend requests are handled by separate listener which injects directly.
+            
+            // To prevent clearing friend requests, we target non-request items or just append.
+            // Simplified: Clear all, re-render standard array. Friend requests will reappear on next snapshot/refresh or we can store them.
+            // For now, let's just render the standard array and let friend request listener prepend.
+            
+            // If friend reqs are transient in DOM, we lose them on array render. 
+            // So we shouldn't wipe InnerHTML if we want to keep them.
+            // We'll clear only elements with class 'notif-item'.
+            
+            const items = notifList.querySelectorAll('.notif-item');
+            items.forEach(el => el.remove());
+            if(emptyMsg) emptyMsg.remove();
+            
+            if (notifications.length === 0 && notifList.children.length === 0) {
                 notifList.appendChild(emptyMsg);
                 return;
             }
@@ -1015,7 +1219,8 @@
 
         clearNotifsBtn.addEventListener('click', () => {
             notifications = [];
-            renderNotifications();
+            notifList.innerHTML = '';
+            notifList.appendChild(emptyMsg);
         });
 
         // --- LISTEN FOR MY PFP CHANGES ---
@@ -1123,7 +1328,8 @@
             onlineList.innerHTML = '';
             renderUserItem(currentUser.uid, currentUser.displayName || 'YOU', true, currentUserPfp);
             activeUsersMap.forEach((u, uid) => {
-                if (uid !== currentUser.uid) {
+                // Filter Blocked Users from Online List
+                if (uid !== currentUser.uid && !myBlocked.has(uid)) {
                     renderUserItem(uid, u.name, false, u.pfp || DEFAULT_AVATAR);
                 }
             });
